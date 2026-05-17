@@ -17,21 +17,59 @@ db eval {
     );
 }
 
-variable calendar_date [clock seconds]
-variable calendar_year [clock format "$calendar_date" -format %Y -locale es_ES -timezone America/Havana]
-variable calendar_month [clock format "$calendar_date" -format %B -locale es_ES -timezone America/Havana]
-variable selected_worker -1
+namespace eval state {
+    set guardias [dict create]
 
-set months {}
-for {set month 1} {$month <= 12} {incr month} {
-    set time [clock scan $month -format %N -locale es_ES -timezone America/Havana]
-    lappend months [clock format $time -format %B -locale es_ES -timezone America/Havana]
-}
+    namespace eval calendar {
+        variable month [clock format now -format %B -locale es_ES -timezone America/Havana]
+        variable year [clock format now -format %Y -locale es_ES -timezone America/Havana]
 
-set days {}
-for {set day 1} {$day <= 7} {incr day} {
-    set time [clock scan $day -format %u -locale es_ES -timezone America/Havana]
-    lappend days [clock format $time -format %A -locale es_ES -timezone America/Havana]
+        set months {}
+        for {set it 1} {$it <= 12} {incr it} {
+            set time [clock scan $it -format %N -locale es_ES -timezone America/Havana]
+            lappend months [clock format $time -format %B -locale es_ES -timezone America/Havana]
+        }
+
+        set days {}
+        for {set it 1} {$it <= 7} {incr it} {
+            set time [clock scan $it -format %u -locale es_ES -timezone America/Havana]
+            lappend days [clock format $time -format %A -locale es_ES -timezone America/Havana]
+        }
+
+        proc get_date {} {
+            return [clock scan "01/$::state::calendar::month/$::state::calendar::year" -format "%d/%B/%Y" -locale es_ES -timezone America/Havana]
+        }
+    }
+
+    namespace eval worker {
+        variable id -1
+        variable name ""
+
+        proc update {} {
+            if {$id > -1} {
+                db eval {UPDATE workers SET name = $name WHERE id = $id}
+            } else {
+                db eval {INSERT INTO workers (name) VALUES ($name)}
+            }
+        }
+
+        proc delete {} {
+            if {$id > -1} {
+                set answer [tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desa dar de baja a $name?"]
+                if {$answer eq yes} {
+                    db eval {DELETE FROM workers WHERE id = $id}
+                    return yes
+                }
+            }
+
+            return no
+        }
+
+        proc clear {} {
+            set id -1
+            set name ""
+        }
+    }
 }
 
 snit::widgetadaptor calendar_cell {
@@ -42,7 +80,6 @@ snit::widgetadaptor calendar_cell {
     variable day_color ""
 
     option -date -configuremethod set_date
-    option -curr_date
 
     constructor {args} {
         installhull using ttk::frame -relief solid -borderwidth 2
@@ -62,27 +99,24 @@ snit::widgetadaptor calendar_cell {
 
     method set_date {option value} {
         set options($option) $value
-        if {[expr {"$options(-curr_date)" ne ""}]} {
-            $self update_day
-        }
+        $self update_day
     }
 
     method update_day {} {
         set date "$options(-date)"
 
-        set day_str [clock format $date -format "%e" -locale es_ES -timezone America/Havana]
+        set day_str [clock format $date -format %e -locale es_ES -timezone America/Havana]
 
-        set now_date_str [clock format now -format "%D" -locale es_ES -timezone America/Havana]
-        set date_str [clock format $date -format "%D" -locale es_ES -timezone America/Havana]
+        set now_date_str [clock format now -format %D -locale es_ES -timezone America/Havana]
+        set date_str [clock format $date -format %D -locale es_ES -timezone America/Havana]
 
-        set curr_month [clock format $::calendar_date -format "%m" -locale es_ES -timezone America/Havana]
-        set date_month [clock format $date -format "%m" -locale es_ES -timezone America/Havana]
+        set date_month [clock format $date -format %B -locale es_ES -timezone America/Havana]
 
         set day_color ""
         if {[expr {$now_date_str eq $date_str}]} {
             set day_color red
         }
-        if {[expr {$curr_month ne $date_month}]} {
+        if {[expr {$::state::calendar::month ne $date_month}]} {
             set day_color grey
         }
 
@@ -101,9 +135,9 @@ snit::widgetadaptor calendar_paginator {
         $self configurelist $args
 
         set prev_button [ttk::button $win.prev_button -text "<" -command [mymethod prev_month]]
-        set month_selector [ttk::combobox $win.month_selector -values $::months -textvariable [myvar month] -state readonly -width 8]
+        set month_selector [ttk::combobox $win.month_selector -values $::state::calendar::months -textvariable ::state::calendar::month -state readonly -width 8]
         set separator [ttk::label $win.separator -text "-"]
-        set year_selector [ttk::spinbox $win.year_selector -from 2000 -to 2100 -increment 1 -textvariable [myvar year] -state readonly -width 8]
+        set year_selector [ttk::spinbox $win.year_selector -from 2000 -to 2100 -increment 1 -textvariable ::state::calendar::year -state readonly -width 8]
         set next_button [ttk::button $win.next_button -text ">" -command [mymethod next_month]]
 
         grid $prev_button -row 0 -column 1 -padx 4
@@ -116,26 +150,20 @@ snit::widgetadaptor calendar_paginator {
         grid columnconfigure $win 1 -weight 0 -uniform buttons
         grid columnconfigure $win 5 -weight 0 -uniform buttons
         grid columnconfigure $win 6 -weight 1 -uniform spacers
-
-        trace add variable [myvar month] write [mymethod update_date]
-        trace add variable [myvar year] write [mymethod update_date]
-    }
-
-    destructor {
-        trace remove variable [myvar month] write [mymethod update_date]
-        trace remove variable [myvar year] write [mymethod update_date]
     }
 
     method prev_month {} {
-        set ::calendar_date [clock add "$::calendar_date" -1 month]
+        set date [::state::calendar::get_date]
+        set date [clock add "$date" -1 month]
+        set ::state::calendar::month [clock format $date -format %B -locale es_ES -timezone America/Havana]
+        set ::state::calendar::year [clock format $date -format %Y -locale es_ES -timezone America/Havana]
     }
 
     method next_month {} {
-        set ::calendar_date [clock add "$::calendar_date" 1 month]
-    }
-
-    method update_date {args} {
-        set ::calendar_date [clock scan "01/$month/$year" -format "%d/%B/%Y" -locale es_ES -timezone America/Havana]
+        set date [::state::calendar::get_date]
+        set date [clock add "$date" 1 month]
+        set ::state::calendar::month [clock format $date -format %B -locale es_ES -timezone America/Havana]
+        set ::state::calendar::year [clock format $date -format %Y -locale es_ES -timezone America/Havana]
     }
 }
 
@@ -149,28 +177,12 @@ snit::widgetadaptor calendar_grid {
         installhull using ttk::frame
         $self configurelist $args
 
-        $self set_date
-        $self update_cell_dates
-
         for {set col 1} {$col <= 7} {incr col} {
-            set header [ttk::label $win.hcol_$col -text [lindex $::days [expr {$col - 1}]] -anchor center]
+            set header [ttk::label $win.hcol_$col -text [lindex $::state::calendar::days [expr {$col - 1}]] -anchor center]
             grid $header -row 0 -column $col -sticky nsew
         }
 
-        set cell_date $first_cell_date
-
-        for {set row 1} {$row <= 6} {incr row} {
-            set week_num [clock format $cell_date -format "%V" -locale es_ES -timezone America/Havana]
-            set header [ttk::label $win.hrow_$row -text $week_num]
-            grid $header -row $row -column 0 -sticky nsew
-
-            for {set col 1} {$col <= 7} {incr col} {
-                set cell [calendar_cell $win.cell_${row}x${col} -date $cell_date]
-                grid $cell -row $row -column $col -sticky nsew -padx 1 -pady 1
-
-                set cell_date [clock add $cell_date 1 day -locale es_ES -timezone America/Havana]
-            }
-        }
+        $self update
 
         grid columnconfigure $win 0 -weight 0 -minsize 30
         for {set col 1} {$col <= 7} {incr col} {
@@ -181,53 +193,37 @@ snit::widgetadaptor calendar_grid {
             grid rowconfigure $win $row -weight 1 -uniform weeks -minsize 80
         }
 
-        trace add variable "$::calendar_date" write [mymethod update_date]
+        trace add variable ::state::calendar::month write [mymethod update]
+        trace add variable ::state::calendar::year write [mymethod update]
     }
 
     destructor {
-        trace remove variable "$::calendar_date" write [mymethod update_date]
-    }
-
-    method set_date {args} {
-        set ::year [clock format "$::calendar_date" -format %Y -locale es_ES -timezone America/Havana]
-        set ::month [clock format "$::calendar_date" -format %B -locale es_ES -timezone America/Havana]
-    }
-
-    method update_cell_dates {args} {
-        set first_month_day [clock scan "01/$::month/$::year" -format "%d/%B/%Y" -locale es_ES -timezone America/Havana]
-        set week_day [clock format $first_month_day -format "%u" -locale es_ES -timezone America/Havana]
-        set first_cell_date [clock add $first_month_day -[expr {$week_day - 1}] days -locale es_ES -timezone America/Havana]
-    }
-
-    method update_date {args} {
-        $self set_date
-        $self update_cell_dates
-
-        set cell_date $first_cell_date
-
-        for {set row 1} {$row <= 6} {incr row} {
-            set week_num [clock format $cell_date -format "%V" -locale es_ES -timezone America/Havana]
-            $win.hrow_$row configure -text $week_num
-
-            for {set col 1} {$col <= 7} {incr col} {
-                $win.cell_${row}x${col} configure -date $cell_date
-
-                set cell_date [clock add $cell_date 1 day -locale es_ES -timezone America/Havana]
-            }
-        }
+        trace remove variable state::calendar::month write [mymethod update]
+        trace remove variable state::calendar::year write [mymethod update]
     }
 
     method update {args} {
-        set first_month_day [clock scan "01/$month/$year" -format "%d/%B/%Y" -locale es_ES -timezone America/Havana]
+        set first_month_day [clock scan "01/$::state::calendar::month/$::state::calendar::year" -format "%d/%B/%Y" -locale es_ES -timezone America/Havana]
         set week_day [clock format $first_month_day -format "%u" -locale es_ES -timezone America/Havana]
         set cell_date [clock add $first_month_day -[expr {$week_day - 1}] days -locale es_ES -timezone America/Havana]
 
         for {set row 1} {$row <= 6} {incr row} {
             set week_num [clock format $cell_date -format "%V" -locale es_ES -timezone America/Havana]
-            $win.hrow_$row configure -text $week_num
+            if {[winfo exists $win.hrow_$row]} {
+                $win.hrow_$row configure -text $week_num
+            } else {
+                set header [ttk::label $win.hrow_$row -text $week_num]
+                grid $header -row $row -column 0 -sticky nsew
+            }
 
             for {set col 1} {$col <= 7} {incr col} {
-                $win.cell_${row}x${col} configure -date $cell_date
+                if {[winfo exists $win.cell_${row}x${col}]} {
+                    $win.cell_${row}x${col} configure -date $cell_date
+                } else {
+                    set cell [calendar_cell $win.cell_${row}x${col} -date $cell_date]
+                    grid $cell -row $row -column $col -sticky nsew -padx 1 -pady 1
+                }
+
                 set cell_date [clock add $cell_date 1 day -locale es_ES -timezone America/Havana]
             }
         }
@@ -245,12 +241,8 @@ snit::widgetadaptor calendar {
         set paginator [calendar_paginator $win.paginator]
         set grid [calendar_grid $win.grid]
 
-        grid $paginator -row 0 -column 0 -sticky nsew
-        grid $grid -row 1 -column 0 -sticky nsew
-
-        grid rowconfigure $win 0 -weight 0
-        grid rowconfigure $win 1 -weight 1
-        grid columnconfigure $win 0 -weight 1
+        pack $paginator -fill x
+        pack $grid -fill both -expand yes
     }
 }
 
@@ -258,15 +250,12 @@ snit::widgetadaptor workers_panel_list {
     delegate option * to hull
     delegate method * to hull
 
-    variable editing_name ""
-    variable editing_id -1
-
     constructor {args} {
         installhull using ttk::frame
         $self configurelist $args
 
         set add_frame [ttk::frame $win.add]
-        set add_entry [ttk::entry $add_frame.entry -textvariable [myvar editing_name]]
+        set add_entry [ttk::entry $add_frame.entry -textvariable state::worker::name]
         set add_button [ttk::button $add_frame.button -text "agregar" -command [mymethod add_worker]]
 
         set actions_frame [ttk::frame $win.actions]
@@ -395,12 +384,8 @@ snit::widgetadaptor App {
         set calendar [calendar $win.calendar]
         set workers [workers_panel $win.workers]
 
-        grid $calendar -row 0 -column 0 -sticky nsew
-        grid $workers -row 0 -column 1 -sticky nsew
-
-        grid columnconfigure $win 0 -weight 1
-        grid columnconfigure $win 1 -weight 0
-        grid rowconfigure $win 0 -weight 1
+        pack $calendar -side left -fill both -expand yes
+        pack $workers -side left -fill y
     }
 }
 
