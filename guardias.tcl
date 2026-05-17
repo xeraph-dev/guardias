@@ -7,7 +7,7 @@ sqlite3 db "guardias.db"
 db eval {
     CREATE TABLE IF NOT EXISTS workers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
+        name TEXT UNIQUE NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS calendar (
@@ -45,29 +45,42 @@ namespace eval state {
         variable id -1
         variable name ""
 
-        proc update {} {
-            if {$id > -1} {
-                db eval {UPDATE workers SET name = $name WHERE id = $id}
-            } else {
-                db eval {INSERT INTO workers (name) VALUES ($name)}
+        proc exists {} {
+            return [db eval {SELECT EXISTS(SELECT id FROM workers WHERE id <> $::state::worker::id AND name = $::state::worker::name)}]
+        }
+
+        proc save {} {
+            if {$::state::worker::name eq ""} { return }
+
+            if {[::state::worker::exists]} {
+                tk_messageBox -type ok -icon info -title "Aviso" -message "El usuario ya existe"
+                return
             }
+
+            if {$::state::worker::id > -1} {
+                db eval {UPDATE workers SET name = $::state::worker::name WHERE id = $::state::worker::id}
+            } else {
+                db eval {INSERT INTO workers (name) VALUES ($::state::worker::name)}
+            }
+
+            ::state::worker::clear
+            event generate . <<WorkerSaved>>
         }
 
         proc delete {} {
-            if {$id > -1} {
-                set answer [tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desa dar de baja a $name?"]
+            if {$::state::worker::id > -1} {
+                set answer [tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desa dar de baja a $::state::worker::name?"]
                 if {$answer eq yes} {
-                    db eval {DELETE FROM workers WHERE id = $id}
-                    return yes
+                    db eval {DELETE FROM workers WHERE id = $::state::worker::id}
+                    ::state::worker::clear
+                    event generate . <<WorkerDeleted>>
                 }
             }
-
-            return no
         }
 
         proc clear {} {
-            set id -1
-            set name ""
+            set ::state::worker::id -1
+            set ::state::worker::name ""
         }
     }
 }
@@ -255,12 +268,12 @@ snit::widgetadaptor workers_panel_list {
         $self configurelist $args
 
         set add_frame [ttk::frame $win.add]
-        set add_entry [ttk::entry $add_frame.entry -textvariable state::worker::name]
-        set add_button [ttk::button $add_frame.button -text "agregar" -command [mymethod add_worker]]
+        set add_entry [ttk::entry $add_frame.entry -textvariable ::state::worker::name]
+        set add_button [ttk::button $add_frame.button -text "agregar" -command ::state::worker::save]
 
         set actions_frame [ttk::frame $win.actions]
-        set actions_delete [ttk::button $actions_frame.delete -text "dar baja" -command [mymethod delete_worker]]
-        set actions_cancel [ttk::button $actions_frame.cancel -text "cancelar" -command [mymethod cancel_editing]]
+        set actions_delete [ttk::button $actions_frame.delete -text "dar baja" -command ::state::worker::delete]
+        set actions_cancel [ttk::button $actions_frame.cancel -text "cancelar" -command ::state::worker::clear]
 
         set list_frame [ttk::frame $win.list]
         set list_tree [ttk::treeview $win.list.tree -columns {id name} -show headings]
@@ -286,11 +299,15 @@ snit::widgetadaptor workers_panel_list {
         pack $add_frame $actions_frame -fill x -pady 4
         pack $list_frame -fill both -expand yes -pady 4
 
-        bind $add_entry <Return> [mymethod add_worker]
+        bind $add_entry <Return> ::state::worker::save
         bind $list_tree <Double-1> [mymethod edit_worker]
+
+        bind . <<WorkerSaved>> [mymethod update_list]
+        bind . <<WorkerDeleted>> [mymethod update_list]
     }
 
     method update_list {} {
+        $win.add.button configure -text "agregar"
         $win.list.tree delete [$win.list.tree children {}]
         db eval {SELECT id, name FROM workers} {
             $win.list.tree insert {} end -values [list $id $name]
@@ -303,47 +320,9 @@ snit::widgetadaptor workers_panel_list {
             $win.add.button configure -text "editar"
             set values [$win.list.tree item $sel -values]
             lassign $values id name
-            set editing_id $id
-            set editing_name $name
+            set ::state::worker::id $id
+            set ::state::worker::name $name
         }
-    }
-
-    method add_worker {} {
-        if {$editing_name eq ""} { return }
-
-        if {[db eval {SELECT EXISTS(SELECT id FROM workers WHERE id <> $editing_id AND name = $editing_name)}]} {
-            tk_messageBox -type ok -icon info -title "Aviso" -message "El usuario ya existe"
-            return
-        }
-
-        if {$editing_id > -1} {
-            db eval {UPDATE workers SET name = $editing_name WHERE id = $editing_id}
-        } else {
-            db eval {INSERT INTO workers (name) VALUES ($editing_name)}
-        }
-
-        set editing_id -1
-        set editing_name ""
-
-        $self update_list
-    }
-
-    method delete_worker {} {
-        if {$editing_id ne -1} {
-            set answer [tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desa dar de baja a $editing_name?"]
-            if {$answer eq yes} {
-                db eval {DELETE FROM workers WHERE id = $editing_id}
-
-                $self cancel_editing
-                $self update_list
-            }
-        }
-    }
-
-    method cancel_editing {} {
-        set editing_id -1
-        set editing_name ""
-        $win.add.button configure -text "agregar"
     }
 }
 
