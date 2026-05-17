@@ -264,7 +264,8 @@ snit::widgetadaptor workers_panel_list {
         set add_button [ttk::button $add_frame.button -text "agregar" -command [mymethod add_worker]]
 
         set actions_frame [ttk::frame $win.actions]
-        set actions_cancel [ttk::button $actions_frame.cancel -text "cancelar" -command [mymethod cancel]]
+        set actions_delete [ttk::button $actions_frame.delete -text "dar baja" -command [mymethod delete_worker]]
+        set actions_cancel [ttk::button $actions_frame.cancel -text "cancelar" -command [mymethod cancel_editing]]
 
         set list_frame [ttk::frame $win.list]
         set list_tree [ttk::treeview $win.list.tree -columns {id name} -show headings]
@@ -276,34 +277,20 @@ snit::widgetadaptor workers_panel_list {
         $list_tree column id -width 20
         $list_tree configure -selectmode browse
 
-        set deleted_frame [ttk::labelframe $win.deleted -text "De baja" -padding 4]
-        set deleted_tree [ttk::treeview $win.deleted.tree -columns {id name} -show headings]
-        set deleted_scroll [ttk::scrollbar $win.deleted.scroll -orient vertical -command [list $deleted_tree yview]]
-        $deleted_tree configure -yscrollcommand [list $deleted_scroll set]
-
-        $deleted_tree heading id -text "ID"
-        $deleted_tree heading name -text "Nombre"
-        $deleted_tree column id -width 20
-        $deleted_tree configure -selectmode browse
-
         $self update_list
 
         pack $add_entry -side left -fill both -expand yes -padx 4
         pack $add_button -side left -fill y -padx 4
 
+        pack $actions_delete -side left -fill y -padx 4
         pack $actions_cancel -side left -fill y -padx 4
 
         pack $list_tree -side left -fill both -expand yes
         pack $list_scroll -side right -fill y
 
-        pack $deleted_tree -side left -fill both -expand yes
-        pack $deleted_scroll -side right -fill y
-
         pack $add_frame $actions_frame -fill x -pady 4
         pack $list_frame -fill both -expand yes -pady 4
-        pack $deleted_frame -fill both -expand yes -pady 4
 
-        bind $win <<Added>> [mymethod update_list]
         bind $add_entry <Return> [mymethod add_worker]
         bind $list_tree <Double-1> [mymethod edit_worker]
     }
@@ -316,10 +303,10 @@ snit::widgetadaptor workers_panel_list {
     }
 
     method edit_worker {args} {
-        $win.add.button configure -text "editar"
-        set sel [$win.list selection]
+        set sel [$win.list.tree selection]
         if {$sel ne ""} {
-            set values [$win.list item $sel -values]
+            $win.add.button configure -text "editar"
+            set values [$win.list.tree item $sel -values]
             lassign $values id name
             set editing_id $id
             set editing_name $name
@@ -342,10 +329,23 @@ snit::widgetadaptor workers_panel_list {
 
         set editing_id -1
         set editing_name ""
-        event generate $win <<Added>>
+
+        $self update_list
     }
 
-    method cancel {} {
+    method delete_worker {} {
+        if {$editing_id ne -1} {
+            set answer [tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desa dar de baja a $editing_name?"]
+            if {$answer eq yes} {
+                db eval {DELETE FROM workers WHERE id = $editing_id}
+
+                $self cancel_editing
+                $self update_list
+            }
+        }
+    }
+
+    method cancel_editing {} {
         set editing_id -1
         set editing_name ""
         $win.add.button configure -text "agregar"
