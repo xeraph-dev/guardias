@@ -259,38 +259,59 @@ snit::widgetadaptor workers_panel_list {
         installhull using ttk::frame
         $self configurelist $args
 
-        set add [ttk::frame $win.add]
-        set entry [ttk::entry $add.entry -textvariable [myvar editing_name]]
-        set button [ttk::button $add.button -text "agregar" -command [mymethod add_worker]]
+        set add_frame [ttk::frame $win.add]
+        set add_entry [ttk::entry $add_frame.entry -textvariable [myvar editing_name]]
+        set add_button [ttk::button $add_frame.button -text "agregar" -command [mymethod add_worker]]
 
-        grid $entry -row 0 -column 0 -sticky nsew -padx 4
-        grid $button -row 0 -column 1 -sticky nsew -padx 4
+        set actions_frame [ttk::frame $win.actions]
+        set actions_cancel [ttk::button $actions_frame.cancel -text "cancelar" -command [mymethod cancel]]
 
-        grid columnconfigure $add 0 -weight 1
-        grid columnconfigure $add 1 -weight 0
+        set list_frame [ttk::frame $win.list]
+        set list_tree [ttk::treeview $win.list.tree -columns {id name} -show headings]
+        set list_scroll [ttk::scrollbar $win.list.scroll -orient vertical -command [list $list_tree yview]]
+        $list_tree configure -yscrollcommand [list $list_scroll set]
 
-        set list [ttk::treeview $win.list -columns {id name} -show headings]
-        $list heading id -text "ID"
-        $list heading name -text "Nombre"
-        $list column id -width 20
-        $list configure -selectmode browse
+        $list_tree heading id -text "ID"
+        $list_tree heading name -text "Nombre"
+        $list_tree column id -width 20
+        $list_tree configure -selectmode browse
+
+        set deleted_frame [ttk::labelframe $win.deleted -text "De baja" -padding 4]
+        set deleted_tree [ttk::treeview $win.deleted.tree -columns {id name} -show headings]
+        set deleted_scroll [ttk::scrollbar $win.deleted.scroll -orient vertical -command [list $deleted_tree yview]]
+        $deleted_tree configure -yscrollcommand [list $deleted_scroll set]
+
+        $deleted_tree heading id -text "ID"
+        $deleted_tree heading name -text "Nombre"
+        $deleted_tree column id -width 20
+        $deleted_tree configure -selectmode browse
 
         $self update_list
 
-        grid $add -row 0 -column 0 -sticky nsew -pady 4
-        grid $list -row 1 -column 0 -sticky nsew -pady 4 -padx 4
+        pack $add_entry -side left -fill both -expand yes -padx 4
+        pack $add_button -side left -fill y -padx 4
 
-        grid rowconfigure $win 0 -weight 0
-        grid rowconfigure $win 1 -weight 1
+        pack $actions_cancel -side left -fill y -padx 4
+
+        pack $list_tree -side left -fill both -expand yes
+        pack $list_scroll -side right -fill y
+
+        pack $deleted_tree -side left -fill both -expand yes
+        pack $deleted_scroll -side right -fill y
+
+        pack $add_frame $actions_frame -fill x -pady 4
+        pack $list_frame -fill both -expand yes -pady 4
+        pack $deleted_frame -fill both -expand yes -pady 4
 
         bind $win <<Added>> [mymethod update_list]
-        bind $list <Double-1> [mymethod edit_worker]
+        bind $add_entry <Return> [mymethod add_worker]
+        bind $list_tree <Double-1> [mymethod edit_worker]
     }
 
     method update_list {} {
-        $win.list delete [$win.list children {}]
+        $win.list.tree delete [$win.list.tree children {}]
         db eval {SELECT id, name FROM workers} {
-            $win.list insert {} end -values "$id $name"
+            $win.list.tree insert {} end -values [list $id $name]
         }
     }
 
@@ -300,7 +321,7 @@ snit::widgetadaptor workers_panel_list {
         if {$sel ne ""} {
             set values [$win.list item $sel -values]
             lassign $values id name
-            set editign_id $id
+            set editing_id $id
             set editing_name $name
         }
     }
@@ -308,9 +329,26 @@ snit::widgetadaptor workers_panel_list {
     method add_worker {} {
         if {$editing_name eq ""} { return }
 
-        db eval {INSERT INTO workers (name) VALUES ($editing_name)}
+        if {[db eval {SELECT EXISTS(SELECT id FROM workers WHERE id <> $editing_id AND name = $editing_name)}]} {
+            tk_messageBox -type ok -icon info -title "Aviso" -message "El usuario ya existe"
+            return
+        }
+
+        if {$editing_id > -1} {
+            db eval {UPDATE workers SET name = $editing_name WHERE id = $editing_id}
+        } else {
+            db eval {INSERT INTO workers (name) VALUES ($editing_name)}
+        }
+
+        set editing_id -1
         set editing_name ""
         event generate $win <<Added>>
+    }
+
+    method cancel {} {
+        set editing_id -1
+        set editing_name ""
+        $win.add.button configure -text "agregar"
     }
 }
 
@@ -336,7 +374,7 @@ snit::widgetadaptor workers_panel {
         $tabs add [workers_panel_stats $win.tabs.stats] -text "Estadisticas"
         $tabs add [workers_panel_list $win.tabs.list] -text "Plantilla"
 
-        pack $tabs -expand true -fill both
+        pack $tabs -expand yes -fill both
     }
 }
 
