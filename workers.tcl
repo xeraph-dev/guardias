@@ -60,6 +60,7 @@ snit::widgetadaptor workers_panel_list {
     method cancel_editing {} {
         $win.list.tree selection remove [$win.list.tree selection]
         ::state::worker::clear
+        $self update_list
     }
 
     method save_worker {} {
@@ -72,7 +73,6 @@ snit::widgetadaptor workers_panel_list {
 
         ::state::worker::save
         $self cancel_editing
-        $self update_list
     }
 
     method delete_worker {} {
@@ -81,7 +81,6 @@ snit::widgetadaptor workers_panel_list {
             if {$answer eq yes} {
                 ::state::worker::delete
                 $self cancel_editing
-                $self update_list
             }
         }
     }
