@@ -8,7 +8,13 @@ db eval {
     CREATE TABLE IF NOT EXISTS workers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS calendar (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        worker_id INTEGER NOT NULL REFERENCES workers (id),
+        date TEXT UNIQUE NOT NULL
+    );
 }
 
 variable calendar_date [clock seconds]
@@ -282,8 +288,8 @@ snit::widgetadaptor workers_panel_list {
         pack $add_entry -side left -fill both -expand yes -padx 4
         pack $add_button -side left -fill y -padx 4
 
-        pack $actions_delete -side left -fill y -padx 4
-        pack $actions_cancel -side left -fill y -padx 4
+        pack $actions_cancel -side right -fill y -padx 4
+        pack $actions_delete -side right -fill y -padx 4
 
         pack $list_tree -side left -fill both -expand yes
         pack $list_scroll -side right -fill y
