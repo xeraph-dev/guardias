@@ -2,8 +2,6 @@ snit::widget CalendarCell {
     delegate option * to hull
     delegate method * to hull
 
-    variable day
-
     option -date
     option -cell_date
     option -selected_date
@@ -153,6 +151,10 @@ snit::widget CalendarGrid {
         trace add variable $options(-date) write [mymethod update_cells]
     }
 
+    destructor {
+        trace remove variable $options(-date) write [mymethod update_cells]
+    }
+
     method update_cells {args} {
         upvar $options(-date) date
 
@@ -184,6 +186,8 @@ snit::widget CalendarGrid {
 snit::widget Calendar {
     delegate option * to hull
     delegate method * to hull
+
+    option -worker_id
 
     set months {}
     set days {}
@@ -223,5 +227,9 @@ snit::widget Calendar {
 
     method date_selected {args} {
         puts [clock format $selected_date -format "%d/%B/%Y"]
+    }
+
+    method unselect_date {} {
+        set selected_date 0
     }
 }

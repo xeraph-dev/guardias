@@ -2,8 +2,12 @@ package require Tk
 package require snit
 package require sqlite3
 
+sqlite3 db "guardias.db"
+
 source src/app.tcl
 source src/calendar.tcl
+source src/database.tcl
+source src/workers_panel.tcl
 
 wm title . "Guardias"
 
@@ -16,3 +20,5 @@ update idletasks
 wm minsize . [winfo reqwidth .] [winfo reqheight .]
 
 tkwait window .
+
+db close
