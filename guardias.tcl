@@ -4,10 +4,18 @@ package require sqlite3
 
 sqlite3 db "guardias.db"
 
-source src/app.tcl
-source src/calendar.tcl
 source src/database.tcl
-source src/workers_panel.tcl
+
+source src/App.tcl
+
+source src/calendar/Calendar.tcl
+source src/calendar/CalendarCell.tcl
+source src/calendar/CalendarPaginator.tcl
+
+source src/workers_panel/WorkersPanel.tcl
+source src/workers_panel/WorkersPanelActions.tcl
+source src/workers_panel/WorkersPanelAdd.tcl
+source src/workers_panel/WorkersPanelList.tcl
 
 wm title . "Guardias"
 
