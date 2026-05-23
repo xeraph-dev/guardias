@@ -26,7 +26,7 @@ snit::widget Calendar {
             lappend days [clock format $time -format %A]
         }
 
-        set paginator [CalendarPaginator $win.paginator -months $months -date [myvar date]]
+        set paginator [CalendarPaginator $win.paginator -months $months -date [myvar date] -worker_id $options(-worker_id)]
         set grid [CalendarGrid $win.grid -days $days -date [myvar date] -selected_date [myvar selected_date]]
 
         pack $paginator -fill x -padx 4 -pady 4

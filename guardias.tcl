@@ -1,4 +1,5 @@
-package require Tk
+lappend auto_path [file join [file dirname [info script]] lib]
+
 package require snit
 package require sqlite3
 
@@ -26,7 +27,3 @@ pack [App .app] -expand yes -fill both -padx 4 -pady 4
 
 update idletasks
 wm minsize . [winfo reqwidth .] [winfo reqheight .]
-
-tkwait window .
-
-db close
