@@ -2,7 +2,7 @@ db eval {
     CREATE TABLE IF NOT EXISTS workers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
-        weight INTEGER UNIQUE NOT NULL
+        weight INTEGER NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS calendar (

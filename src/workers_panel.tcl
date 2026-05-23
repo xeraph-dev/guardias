@@ -32,7 +32,11 @@ snit::widget WorkersPanelAdd {
         if {$id != -1} {
             db eval {UPDATE workers SET name = $name WHERE id = $id}
         } else {
-            db eval {INSERT INTO workers (name) VALUES ($name)}
+            set weight 0
+            db eval {SELECT weight FROM workers ORDER BY weight DESC LIMIT 1} values {
+                set weight [expr {$values(weight) + 1}]
+            }
+            db eval {INSERT INTO workers (name, weight) VALUES ($name, $weight)}
         }
 
         $self cancel_editing
@@ -74,8 +78,8 @@ snit::widget WorkersPanelActions {
     constructor {args} {
         $self configurelist $args
 
-        set up [ttk::button $win.up -text "^" -state disabled]
-        set down [ttk::button $win.down -text "v" -state disabled]
+        set up [ttk::button $win.up -text "^" -command [mymethod worker_up] -state disabled]
+        set down [ttk::button $win.down -text "v" -command [mymethod worker_down] -state disabled]
         set delete [ttk::button $win.delete -text "dar baja" -command [mymethod delete_worker] -state disabled]
         set cancel [ttk::button $win.cancel -text "cancelar" -command [mymethod cancel_editing] -state disabled]
 
@@ -102,16 +106,79 @@ snit::widget WorkersPanelActions {
     method worker_id_updated {args} {
         upvar $options(-worker_id) id
 
+        set upper_weight 0
+        set lower_weight 0
+        set worker_weight 0
+
+        db eval {SELECT weight FROM workers WHERE id = $id} {
+            set worker_weight $weight
+        }
+        db eval {SELECT weight FROM workers ORDER BY weight ASC LIMIT 1} {
+            set lower_weight $weight
+        }
+        db eval {SELECT weight FROM workers ORDER BY weight DESC LIMIT 1} {
+            set upper_weight $weight
+        }
+
         if {$id == -1} {
             $win.up configure -state disabled
             $win.down configure -state disabled
             $win.delete configure -state disabled
             $win.cancel configure -state disabled
         } else {
-            $win.up configure -state normal
-            $win.down configure -state normal
             $win.delete configure -state normal
             $win.cancel configure -state normal
+
+            if {$worker_weight > $lower_weight} {
+                $win.up configure -state normal
+            } else {
+                $win.up configure -state disabled
+            }
+            if {$worker_weight < $upper_weight} {
+                $win.down configure -state normal
+            } else {
+                $win.down configure -state disabled
+            }
+        }
+    }
+
+    method worker_up {args} {
+        upvar $options(-worker_id) id
+
+        db eval {SELECT weight FROM workers WHERE id = $id} {
+            db transaction {
+                db eval {
+                    UPDATE workers
+                    SET weight = $weight
+                    WHERE weight = $weight - 1;
+                }
+                db eval {
+                    UPDATE workers
+                    SET weight = $weight - 1
+                    WHERE id = $id
+                }
+            }
+            event generate $win <<WorkerReordered>>
+        }
+    }
+
+    method worker_down {args} {
+        upvar $options(-worker_id) id
+
+        db eval {SELECT weight FROM workers WHERE id = $id} {
+            db transaction {
+                db eval {
+                    UPDATE workers
+                    SET weight = $weight
+                    WHERE weight = $weight + 1;
+                }
+                db eval {
+                    UPDATE workers
+                    SET weight = $weight + 1
+                    WHERE id = $id
+                }
+            }
+            event generate $win <<WorkerReordered>>
         }
     }
 }
@@ -140,8 +207,16 @@ snit::widget WorkersPanelList {
 
     method update_list {} {
         $win.tree delete [$win.tree children {}]
-        db eval {SELECT id, name, weight FROM workers} {
-            $win.tree insert {} end -values [list $id $name $weight]
+        db eval {SELECT id, name, weight FROM workers ORDER BY weight ASC} {
+            $win.tree insert {} end -id $id -values [list $id $name $weight]
+        }
+    }
+
+    method recover_selection {} {
+        upvar $options(-worker_id) id
+        set sel [$win.tree selection]
+        if {$sel == "" && $id != -1} {
+            $win.tree selection add $id
         }
     }
 
@@ -178,18 +253,19 @@ snit::widgetadaptor WorkersPanel {
         pack $add $actions -fill x -pady 4
         pack $list -fill both -expand yes -pady 4
 
-        bind $add <<WorkerSaved>> [mymethod workers_saved]
+        bind $add <<WorkerSaved>> [mymethod worker_saved]
         bind $actions <<EditingCanceled>> [mymethod cancel_editing]
-        bind $actions <<WorkerDeleted>> [mymethod workers_deleted]
+        bind $actions <<WorkerDeleted>> [mymethod worker_deleted]
+        bind $actions <<WorkerReordered>> [mymethod worker_reordered]
     }
 
-    method workers_saved {args} {
+    method worker_saved {args} {
         $win.list update_list
 
         event generate $win <<WorkerSaved>>
     }
 
-    method workers_deleted {args} {
+    method worker_deleted {args} {
         $win.add cancel_editing
         $win.list cancel_editing
         $win.list update_list
@@ -202,5 +278,13 @@ snit::widgetadaptor WorkersPanel {
         $win.list cancel_editing
 
         event generate $win <<EditingCanceled>>
+    }
+
+    method worker_reordered {args} {
+        $win.list update_list
+        $win.list recover_selection
+        $win.actions worker_id_updated
+
+        event generate $win <<WorkerReordered>>
     }
 }

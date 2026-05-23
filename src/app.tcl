@@ -14,11 +14,11 @@ snit::widget App {
         pack $workers_panel -side left -fill y -padx 4
 
         bind $workers_panel <<EditingCanceled>> [mymethod cancel_editing]
+        bind $workers_panel <<WorkerDeleted>> [mymethod cancel_editing]
     }
 
     method cancel_editing {args} {
         set worker_id -1
-
         $win.calendar unselect_date
     }
 }
