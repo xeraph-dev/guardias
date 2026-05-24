@@ -21,6 +21,11 @@ snit::widget CalendarCell {
         trace add variable $options(-selected_date) write [mymethod update_label]
     }
 
+    destructor {
+        trace remove variable $options(-date) write [mymethod update_label]
+        trace remove variable $options(-selected_date) write [mymethod update_label]
+    }
+
     method on_click {} {
         set $options(-selected_date) $options(-cell_date)
     }

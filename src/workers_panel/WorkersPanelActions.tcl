@@ -18,6 +18,10 @@ snit::widget WorkersPanelActions {
         trace add variable $options(-worker_id) write [mymethod worker_id_updated]
     }
 
+    destructor {
+        trace remove variable $options(-worker_id) write [mymethod worker_id_updated]
+    }
+
     method cancel_editing {args} {
         event generate $win <<EditingCanceled>>
     }

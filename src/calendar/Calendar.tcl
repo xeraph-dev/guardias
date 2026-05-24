@@ -36,6 +36,11 @@ snit::widget Calendar {
         trace add variable selected_date write [mymethod date_selected]
     }
 
+    destructor {
+        trace remove variable date write [mymethod date_changed]
+        trace remove variable selected_date write [mymethod date_selected]
+    }
+
     method date_changed {args} {
         puts [clock format $date -format "%B/%Y"]
     }

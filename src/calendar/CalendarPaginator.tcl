@@ -46,6 +46,10 @@ snit::widget CalendarPaginator {
         trace add variable $options(-worker_id) write [mymethod worker_id_changed]
     }
 
+    destructor {
+        trace remove variable $options(-worker_id) write [mymethod worker_id_changed]
+    }
+
     method worker_id_changed {args} {
         upvar $options(-date) date
         upvar $options(-worker_id) id

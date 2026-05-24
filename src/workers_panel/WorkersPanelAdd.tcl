@@ -21,6 +21,11 @@ snit::widget WorkersPanelAdd {
         trace add variable $options(-worker_id) write [mymethod worker_id_updated]
     }
 
+    destructor {
+        trace remove variable name write [mymethod name_changed]
+        trace remove variable $options(-worker_id) write [mymethod worker_id_updated]
+    }
+
     method save_worker {} {
         upvar $options(-worker_id) id
 
