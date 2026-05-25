@@ -10,8 +10,9 @@ source src/database.tcl
 source src/App.tcl
 
 source src/calendar/Calendar.tcl
-source src/calendar/CalendarCell.tcl
 source src/calendar/CalendarPaginator.tcl
+source src/calendar/CalendarGrid.tcl
+source src/calendar/CalendarCell.tcl
 
 source src/workers_panel/WorkersPanel.tcl
 source src/workers_panel/WorkersPanelActions.tcl
