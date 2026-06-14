@@ -13,7 +13,7 @@ snit::widget Calendar {
     constructor {args} {
         $self configurelist $args
 
-        set date_str [clock format now -format "01/%m/%Y 00:00:00"]
+        set date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
         set date [clock scan $date_str -format "%d/%m/%Y %H:%M:%S"]
 
         for {set month 1} {$month <= 12} {incr month} {

@@ -42,7 +42,7 @@ snit::widget CalendarCell {
         set date_month [clock format $date -format %B]
         set cell_month [clock format $options(-cell_date) -format %B]
 
-        set now_date_str [clock format now -format "%d/%m/%Y 00:00:00"]
+        set now_date_str [clock format [clock seconds] -format "%d/%m/%Y 00:00:00"]
         set now_date [clock scan $now_date_str -format "%d/%m/%Y %H:%M:%S"]
 
         $win.label configure -foreground {}
