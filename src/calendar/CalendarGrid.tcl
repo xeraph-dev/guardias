@@ -2,7 +2,7 @@ snit::widget CalendarGrid {
     delegate option * to hull
     delegate method * to hull
 
-    option -date -readonly true
+    option -date -readonly yes
     option -selected_date
 
     constructor {args} {

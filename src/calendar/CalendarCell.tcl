@@ -2,7 +2,7 @@ snit::widget CalendarCell {
     delegate option * to hull
     delegate method * to hull
 
-    option -date -readonly true
+    option -date -readonly yes
     option -cell_date
     option -selected_date
 
