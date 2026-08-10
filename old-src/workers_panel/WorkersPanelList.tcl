@@ -22,7 +22,7 @@ snit::widget WorkersPanelList {
 
     method update_list {} {
         $win.tree delete [$win.tree children {}]
-        foreach {id name weight} [store worker list] {
+        store worker get_all {
             $win.tree insert {} end -id $id -values [list $id $name $weight]
         }
     }
