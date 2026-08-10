@@ -8,11 +8,14 @@ namespace import defer::defer
 
 sqlite3 db "guardias.db"
 
+source src/macros.tcl
+
 source src/database.tcl
 
 source src/App.tcl
 
 source src/calendar/Calendar.tcl
+source src/calendar/CalendarCell.tcl
 source src/calendar/CalendarGrid.tcl
 source src/calendar/CalendarPaginator.tcl
 
