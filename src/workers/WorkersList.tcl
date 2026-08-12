@@ -19,7 +19,8 @@ snit::widget WorkersList {
         pack $scroll -side right -fill y
 
         bind . <<WorkerCreated>> [mymethod Refresh]
-        bind . <<WorkerUpdated>> [mymethod RefreshWorker %d]
+        bind . <<WorkerUpdated>> [mymethod Update %d]
+        bind . <<WorkerDeleted>> [mymethod Delete %d]
         bind $tree <<TreeviewSelect>> [mymethod Select]
 
         $self configurelist $args
@@ -34,10 +35,15 @@ snit::widget WorkersList {
         }
     }
 
-    method RefreshWorker {worker_id} {
+    method Update {worker_id} {
         db eval {SELECT id, name, weight weight FROM workers WHERE id = :worker_id} {
             $tree item $id -values [list $id $name $weight]
         }
+    }
+
+    method Delete {worker_id} {
+        $tree selection remove [$tree selection]
+        $tree delete $worker_id
     }
 
     method Select {args} {

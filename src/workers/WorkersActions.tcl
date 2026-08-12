@@ -6,7 +6,7 @@ snit::widget WorkersActions {
     component delete
     component cancel
 
-    option -selected_worker_id
+    option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
 
     delegate option * to hull
     delegate method * to hull
@@ -22,11 +22,64 @@ snit::widget WorkersActions {
         $self configurelist $args
     }
 
+    destructor {
+        try {trace add variable $options(-selected_worker_id) write [mymethod SelectedWorkerIdChanged]}
+    }
+
+    method ConfigureSelectedWorkerIdOption {option value} {
+        set options($option) $value
+        $self SelectedWorkerIdChanged
+        trace add variable $options(-selected_worker_id) write [mymethod SelectedWorkerIdChanged]
+    }
+
+    method SelectedWorkerIdChanged {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
+
+        $up configure -state disabled
+        $down configure -state disabled
+        $delete configure -state disabled
+        $cancel configure -state disabled
+
+        if {$selected_worker_id == -1} {return}
+
+        set upper_weight 0
+        set lower_weight 0
+        set worker_weight 0
+
+        db eval {SELECT weight FROM workers WHERE id = :selected_worker_id} {
+            set worker_weight $weight
+        }
+        db eval {SELECT weight FROM workers ORDER BY weight ASC LIMIT 1} {
+            set lower_weight $weight
+        }
+        db eval {SELECT weight FROM workers ORDER BY weight DESC LIMIT 1} {
+            set upper_weight $weight
+        }
+
+        $delete configure -state normal
+        $cancel configure -state normal
+        if {$worker_weight > $lower_weight} {$up configure -state normal}
+        if {$worker_weight < $upper_weight} {$down configure -state normal}
+    }
+
     method Up {args} {}
 
     method Down {args} {}
 
-    method Delete {args} {}
+    method Delete {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
 
-    method Cancel {args} {}
+        db eval {SELECT name FROM workers WHERE id = :selected_worker_id} {
+            if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
+                db eval {DELETE FROM workers WHERE id = :selected_worker_id}
+                event generate . <<WorkerDeleted>> -data $selected_worker_id -when now
+                $self Cancel
+            }
+        }
+    }
+
+    method Cancel {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
+        set selected_worker_id -1
+    }
 }
