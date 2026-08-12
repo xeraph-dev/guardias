@@ -19,6 +19,11 @@ source src/calendar/CalendarCell.tcl
 source src/calendar/CalendarGrid.tcl
 source src/calendar/CalendarPaginator.tcl
 
+source src/workers/Workers.tcl
+source src/Workers/WorkersActions.tcl
+source src/workers/WorkersAdd.tcl
+source src/workers/WorkersList.tcl
+
 wm title . "Guardias"
 
 image create photo icon -file "res/icon.png"

@@ -3,11 +3,13 @@ snit::widget App {
 
     component calendar
     component tabs
+    component workers
 
     delegate option * to hull
     delegate method * to hull
 
-    variable calendar_date
+    variable calendar_date {}
+    variable selected_worker_id -1
 
     constructor {args} {
         set calendar_date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
@@ -15,6 +17,9 @@ snit::widget App {
 
         install calendar using Calendar $win.calendar -calendar_date [myvar calendar_date]
         install tabs using ttk::notebook $win.tabs
+        install workers using Workers $win.workers -selected_worker_id [myvar selected_worker_id]
+
+        $tabs add $workers -text "Plantilla"
 
         pack $calendar -side left -fill both -expand yes -padx 4
         pack $tabs -side left -fill y -padx 4
