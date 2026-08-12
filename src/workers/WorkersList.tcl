@@ -21,6 +21,9 @@ snit::widget WorkersList {
         bind . <<WorkerCreated>> [mymethod Refresh]
         bind . <<WorkerUpdated>> [mymethod Update %d]
         bind . <<WorkerDeleted>> [mymethod Delete %d]
+        bind . <<WorkerUp>> [mymethod Up %d]
+        bind . <<WorkerDown>> [mymethod Down %d]
+        bind . <<WorkerEditCanceled>> [mymethod Cancel]
         bind $tree <<TreeviewSelect>> [mymethod Select]
 
         $self configurelist $args
@@ -42,8 +45,21 @@ snit::widget WorkersList {
     }
 
     method Delete {worker_id} {
-        $tree selection remove [$tree selection]
         $tree delete $worker_id
+    }
+
+    method Up {worker_id} {
+        set index [$tree index $worker_id]
+        $tree move $worker_id {} [expr {$index - 1}]
+    }
+
+    method Down {worker_id} {
+        set index [$tree index $worker_id]
+        $tree move $worker_id {} [expr {$index + 1}]
+    }
+
+    method Cancel {} {
+        $tree selection remove [$tree selection]
     }
 
     method Select {args} {

@@ -23,16 +23,16 @@ snit::widget WorkersActions {
     }
 
     destructor {
-        try {trace add variable $options(-selected_worker_id) write [mymethod SelectedWorkerIdChanged]}
+        try {trace add variable $options(-selected_worker_id) write [mymethod Refresh]}
     }
 
     method ConfigureSelectedWorkerIdOption {option value} {
         set options($option) $value
-        $self SelectedWorkerIdChanged
-        trace add variable $options(-selected_worker_id) write [mymethod SelectedWorkerIdChanged]
+        $self Refresh
+        trace add variable $options(-selected_worker_id) write [mymethod Refresh]
     }
 
-    method SelectedWorkerIdChanged {args} {
+    method Refresh {args} {
         upvar $options(-selected_worker_id) selected_worker_id
 
         $up configure -state disabled
@@ -62,18 +62,58 @@ snit::widget WorkersActions {
         if {$worker_weight < $upper_weight} {$down configure -state normal}
     }
 
-    method Up {args} {}
+    method Up {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
 
-    method Down {args} {}
+        db eval {SELECT id, weight FROM workers WHERE id = :selected_worker_id} {
+            db transaction {
+                db eval {
+                    UPDATE workers
+                    SET weight = :weight
+                    WHERE weight = :weight - 1
+                }
+                db eval {
+                    UPDATE workers
+                    SET weight = :weight - 1
+                    WHERE id = :id
+                }
+            }
+        }
+
+        $self Refresh
+        event generate . <<WorkerUp>> -data $selected_worker_id -when now
+    }
+
+    method Down {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
+
+        db eval {SELECT id, weight FROM workers WHERE id = :selected_worker_id} {
+            db transaction {
+                db eval {
+                    UPDATE workers
+                    SET weight = :weight
+                    WHERE weight = :weight + 1
+                }
+                db eval {
+                    UPDATE workers
+                    SET weight = :weight + 1
+                    WHERE id = :id
+                }
+            }
+        }
+
+        $self Refresh
+        event generate . <<WorkerDown>> -data $selected_worker_id -when now
+    }
 
     method Delete {args} {
         upvar $options(-selected_worker_id) selected_worker_id
 
-        db eval {SELECT name FROM workers WHERE id = :selected_worker_id} {
+        db eval {SELECT id, name FROM workers WHERE id = :selected_worker_id} {
             if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
                 db eval {DELETE FROM workers WHERE id = :selected_worker_id}
-                event generate . <<WorkerDeleted>> -data $selected_worker_id -when now
                 $self Cancel
+                event generate . <<WorkerDeleted>> -data $id -when now
             }
         }
     }
@@ -81,5 +121,6 @@ snit::widget WorkersActions {
     method Cancel {args} {
         upvar $options(-selected_worker_id) selected_worker_id
         set selected_worker_id -1
+        event generate . <<WorkerEditCanceled>> -when now
     }
 }
