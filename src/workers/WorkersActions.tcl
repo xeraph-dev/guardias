@@ -81,7 +81,7 @@ snit::widget WorkersActions {
         }
 
         $self Refresh
-        event generate . <<WorkerUp>> -data $selected_worker_id -when now
+        event generate $win <<WorkerUp>> -data $selected_worker_id -when now
     }
 
     method Down {args} {
@@ -103,7 +103,7 @@ snit::widget WorkersActions {
         }
 
         $self Refresh
-        event generate . <<WorkerDown>> -data $selected_worker_id -when now
+        event generate $win <<WorkerDown>> -data $selected_worker_id -when now
     }
 
     method Delete {args} {
@@ -113,14 +113,12 @@ snit::widget WorkersActions {
             if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
                 db eval {DELETE FROM workers WHERE id = :selected_worker_id}
                 $self Cancel
-                event generate . <<WorkerDeleted>> -data $id -when now
+                event generate $win <<WorkerDeleted>> -data $id -when now
             }
         }
     }
 
     method Cancel {args} {
-        upvar $options(-selected_worker_id) selected_worker_id
-        set selected_worker_id -1
-        event generate . <<WorkerEditCanceled>> -when now
+        event generate $win <<WorkerEditCanceled>> -when now
     }
 }

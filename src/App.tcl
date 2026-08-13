@@ -10,14 +10,19 @@ snit::widget App {
 
     variable calendar_date {}
     variable selected_worker_id -1
+    # variable workers -array {}
+    # variable duties -array {}
 
     constructor {args} {
         set calendar_date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
         set calendar_date [clock scan $calendar_date_str -format "%d/%m/%Y %H:%M:%S"]
 
-        install calendar using Calendar $win.calendar -calendar_date [myvar calendar_date]
+        install calendar using Calendar $win.calendar \
+            -calendar_date [myvar calendar_date] \
+            -selected_worker_id [myvar selected_worker_id]
         install tabs using ttk::notebook $win.tabs
-        install workers using Workers $win.workers -selected_worker_id [myvar selected_worker_id]
+        install workers using Workers $win.workers \
+            -selected_worker_id [myvar selected_worker_id]
 
         $tabs add $workers -text "Plantilla"
 

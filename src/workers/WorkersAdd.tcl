@@ -41,7 +41,7 @@ snit::widget WorkersAdd {
         if {$selected_worker_id != -1} {
             db eval {UPDATE workers SET name = :name WHERE id = :selected_worker_id}
             $self CancelEditing
-            event generate . <<WorkerUpdated>> -data $selected_worker_id -when now
+            event generate $win <<WorkerUpdated>> -data $selected_worker_id -when now
             return
         }
 
@@ -52,11 +52,10 @@ snit::widget WorkersAdd {
         db eval {INSERT INTO workers (name, weight) VALUES (:name, :weight)}
 
         $self CancelEditing
-        event generate . <<WorkerCreated>> -when now
+        event generate $win <<WorkerCreated>> -when now
     }
 
     method CancelEditing {args} {
-        set selected_worker_id -1
         set name ""
     }
 

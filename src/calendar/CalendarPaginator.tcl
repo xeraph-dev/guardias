@@ -9,8 +9,8 @@ snit::widget CalendarPaginator {
     component assign_button
 
     option -calendar_date -configuremethod ConfigureCalendarDateOption
-    option -worker_id -configuremethod ConfigureWorkerIdOption
-    option -selected_date -readonly yes
+    option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
+    option -selected_date -readonly yes -configuremethod ConfigureSelectedDateOption
 
     delegate option * to hull
     delegate method * to hull
@@ -49,7 +49,8 @@ snit::widget CalendarPaginator {
 
     destructor {
         try {trace remove variable $options(-calendar_date) write [mymethod CalendarDateChanged]}
-        try {trace remove variable $options(-worker_id) write [mymethod WorkerIdChanged]}
+        try {trace remove variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]}
+        try {trace remove variable $options(-selected_date) write [mymethod RefreshAssignButton]}
     }
 
     method ConfigureCalendarDateOption {option value} {
@@ -58,11 +59,16 @@ snit::widget CalendarPaginator {
         trace add variable $options(-calendar_date) write [mymethod CalendarDateChanged]
     }
 
-    method ConfigureWorkerIdOption {option value} {
+    method ConfigureSelectedWorkerIdOption {option value} {
         set options($option) $value
-        $self WorkerIdChanged
-        puts "configuring worker id option"
-        trace add variable $options(-worker_id) write [mymethod WorkerIdChanged]
+        $self RefreshAssignButton
+        trace add variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]
+    }
+
+    method ConfigureSelectedDateOption {option value} {
+        set options($option) $value
+        $self RefreshAssignButton
+        trace add variable $options(-selected_date) write [mymethod RefreshAssignButton]
     }
 
     method CalendarDateChanged {args} {
@@ -71,11 +77,13 @@ snit::widget CalendarPaginator {
         $year_selector set [clock format $calendar_date -format %Y]
     }
 
-    method WorkerIdChanged {args} {
-        upvar $options(-selected_date) selected_date
-        upvar $options(-worker_id) worker_id
+    method RefreshAssignButton {args} {
+        if {$options(-selected_date) == "" || $options(-selected_worker_id) == ""} {return}
 
-        if {$worker_id != -1 && $selected_date != 0} {
+        upvar $options(-selected_date) selected_date
+        upvar $options(-selected_worker_id) selected_worker_id
+
+        if {$selected_worker_id != -1 && $selected_date != 0} {
             $assign_button configure -state normal
         } else {
             $assign_button configure -state disabled
@@ -101,13 +109,13 @@ snit::widget CalendarPaginator {
 
     method AssignWorker {args} {
         upvar $options(-selected_date) selected_date
-        upvar $options(-worker_id) worker_id
+        upvar $options(-selected_worker_id) selected_worker_id
 
         db eval {
-            INSERT INTO calendar (worker_id, date)
-            VALUES (:worker_id, :selected_date)
+            INSERT INTO duties (worker_id, date)
+            VALUES (:selected_worker_id, :selected_date)
             ON CONFLICT (date) DO UPDATE
-            SET worker_id = :worker_id
+            SET worker_id = :selected_worker_id
         }
     }
 }

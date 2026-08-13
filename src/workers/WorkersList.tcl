@@ -45,6 +45,7 @@ snit::widget WorkersList {
     }
 
     method Delete {worker_id} {
+        $self Cancel
         $tree delete $worker_id
     }
 
@@ -59,6 +60,8 @@ snit::widget WorkersList {
     }
 
     method Cancel {} {
+        upvar $options(-selected_worker_id) selected_worker_id
+        set selected_worker_id -1
         $tree selection remove [$tree selection]
     }
 

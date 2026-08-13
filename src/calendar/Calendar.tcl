@@ -4,14 +4,14 @@ snit::widget Calendar {
     component paginator
     component grid
 
-    delegate option -worker_id to paginator
+    delegate option -selected_worker_id to paginator
 
     delegate option * to hull
     delegate method * to hull
 
     propagate -calendar_date to {paginator grid}
 
-    variable selected_date {}
+    variable selected_date 0
 
     constructor {args} {
         install paginator using CalendarPaginator $win.paginator -selected_date [myvar selected_date]
