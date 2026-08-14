@@ -3,7 +3,7 @@ snit::widget App {
 
     component calendar_tabs
     component panel_tabs
-    component calendar_tab
+    component duties_tab
     component workers_tab
 
     delegate option * to hull
@@ -22,7 +22,7 @@ snit::widget App {
         set calendar_date [clock scan $calendar_date_str -format "%d/%m/%Y %H:%M:%S"]
 
         install calendar_tabs using ttk::notebook $win.calendar_tabs
-        install calendar_tab using Calendar $win.calendar_tab \
+        install duties_tab using Calendar $win.duties_tab \
             -calendar_date [myvar calendar_date] \
             -selected_worker_id [myvar selected_worker_id] \
             -calendar_workers [myvar calendar_workers] \
@@ -32,11 +32,12 @@ snit::widget App {
             -selected_worker_id [myvar selected_worker_id] \
             -revisions [myvar revisions]
 
-        $calendar_tabs add $calendar_tab -text "Guardias"
+        $calendar_tabs add $duties_tab -text "Guardias"
+
         $panel_tabs add $workers_tab -text "Plantilla"
 
-        pack $calendar_tabs -side left -fill both -expand yes -padx 4
-        pack $panel_tabs -side left -fill y -padx 4
+        pack $calendar_tabs -side left -fill both -expand yes
+        pack $panel_tabs -side left -fill y
 
         $self configurelist $args
 

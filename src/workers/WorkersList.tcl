@@ -6,6 +6,7 @@ snit::widget WorkersList {
 
     option -selected_worker_id -configuremethod ConfigureSelectedworkerIdOption
     option -revisions -configuremethod ConfigureRevisionsOption
+    option -active -readonly yes
 
     delegate option * to hull
     delegate method * to hull
@@ -43,7 +44,7 @@ snit::widget WorkersList {
 
     method SelectedWorkerIdChanged {args} {
         upvar $options(-selected_worker_id) selected_worker_id
-        if {$selected_worker_id == -1} {
+        if {![$tree exists $selected_worker_id] || $selected_worker_id == -1} {
             $tree selection remove [$tree selection]
         }
     }
@@ -51,12 +52,14 @@ snit::widget WorkersList {
     method Refresh {args} {
         upvar $options(-selected_worker_id) selected_worker_id
 
+
+        set active [expr {bool($options(-active))}]
         $tree delete [$tree children {}]
-        db eval {SELECT id, name, weight FROM workers ORDER BY weight ASC} {
+        db eval {SELECT id, name, weight FROM workers WHERE active = :active ORDER BY weight ASC} {
             $tree insert {} end -id $id -values [list $id $name $weight]
         }
 
-        if {$options(-selected_worker_id) != "" && $selected_worker_id != -1} {
+        if {$options(-selected_worker_id) != "" && $selected_worker_id != -1 && [$tree exists $selected_worker_id]} {
             $win.tree selection set $selected_worker_id
         }
     }

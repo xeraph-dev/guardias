@@ -19,7 +19,8 @@ if {$version == 0} {
             CREATE TABLE IF NOT EXISTS workers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
-                weight INTEGER NOT NULL
+                weight INTEGER NOT NULL,
+                active INTEGER NOT NULL DEFAULT TRUE
             ) STRICT
         }
 
