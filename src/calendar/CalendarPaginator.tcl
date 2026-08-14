@@ -11,6 +11,7 @@ snit::widget CalendarPaginator {
     option -calendar_date -configuremethod ConfigureCalendarDateOption
     option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
     option -selected_date -readonly yes -configuremethod ConfigureSelectedDateOption
+    option -revisions
 
     delegate option * to hull
     delegate method * to hull
@@ -110,6 +111,7 @@ snit::widget CalendarPaginator {
     method AssignWorker {args} {
         upvar $options(-selected_date) selected_date
         upvar $options(-selected_worker_id) selected_worker_id
+        upvar $options(-revisions) revisions
 
         db eval {
             INSERT INTO duties (worker_id, date)
@@ -117,5 +119,7 @@ snit::widget CalendarPaginator {
             ON CONFLICT (date) DO UPDATE
             SET worker_id = :selected_worker_id
         }
+
+        incr revisions(workers)
     }
 }

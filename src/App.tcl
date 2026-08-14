@@ -9,10 +9,13 @@ snit::widget App {
     delegate option * to hull
     delegate method * to hull
 
+    variable revisions -array {
+        workers 0
+    }
+
     variable calendar_date {}
     variable selected_worker_id -1
     variable calendar_workers {}
-    variable workers {}
 
     constructor {args} {
         set calendar_date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
@@ -22,7 +25,8 @@ snit::widget App {
         install calendar_tab using Calendar $win.calendar_tab \
             -calendar_date [myvar calendar_date] \
             -selected_worker_id [myvar selected_worker_id] \
-            -calendar_workers [myvar calendar_workers]
+            -calendar_workers [myvar calendar_workers] \
+            -revisions [myvar revisions]
         install panel_tabs using ttk::notebook $win.panel_tabs
         install workers_tab using Workers $win.workers_tab \
             -selected_worker_id [myvar selected_worker_id]
@@ -35,10 +39,16 @@ snit::widget App {
 
         $self configurelist $args
 
-        $self RefreshWorkers
+        $self RefreshCalendarWorkers
+
+        trace add variable revisions(workers) write [mymethod RefreshCalendarWorkers]
     }
 
-    method RefreshWorkers {args} {
+    destructor {
+        try {trace remove variable revisions(workers) write [mymethod RefreshCalendarWorkers]}
+    }
+
+    method RefreshCalendarWorkers {args} {
         set first_month_day_date_str [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
         set first_month_day_date [clock scan $first_month_day_date_str -format "%d/%m/%Y %H:%M:%S"]
         set last_month_day_date [clock add $first_month_day_date 1 month -1 day]

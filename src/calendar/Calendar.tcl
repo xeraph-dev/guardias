@@ -6,6 +6,7 @@ snit::widget Calendar {
 
     delegate option -selected_worker_id to paginator
     delegate option -calendar_workers to grid
+    delegate option -revisions to paginator
 
     delegate option * to hull
     delegate method * to hull

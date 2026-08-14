@@ -77,10 +77,11 @@ snit::widget CalendarCell {
         upvar $options(-calendar_workers) calendar_workers
 
         if {[dict exists $calendar_workers $options(-cell_date)]} {
-            puts [dict get $calendar_workers $options(-cell_date)]
+            set names {}
             dict for {id name} [dict get $calendar_workers $options(-cell_date)] {
-                set names_text [join [list $names_text $name] "\n"]
+                lappend names $name
             }
+            set names_text [join $names "\n"]
         }
     }
 
