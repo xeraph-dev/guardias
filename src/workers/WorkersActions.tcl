@@ -7,6 +7,7 @@ snit::widget WorkersActions {
     component cancel
 
     option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
+    option -revisions
 
     delegate option * to hull
     delegate method * to hull
@@ -81,7 +82,7 @@ snit::widget WorkersActions {
         }
 
         $self Refresh
-        event generate $win <<WorkerUp>> -data $selected_worker_id -when now
+        incr $options(-revisions)(workers)
     }
 
     method Down {args} {
@@ -103,7 +104,7 @@ snit::widget WorkersActions {
         }
 
         $self Refresh
-        event generate $win <<WorkerDown>> -data $selected_worker_id -when now
+        incr $options(-revisions)(workers)
     }
 
     method Delete {args} {
@@ -113,12 +114,15 @@ snit::widget WorkersActions {
             if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
                 db eval {DELETE FROM workers WHERE id = :selected_worker_id}
                 $self Cancel
-                event generate $win <<WorkerDeleted>> -data $id -when now
+                incr $options(-revisions)(workers)
             }
         }
+
+        incr $options(-revisions)(workers)
     }
 
     method Cancel {args} {
-        event generate $win <<WorkerEditCanceled>> -when now
+        upvar $options(-selected_worker_id) selected_worker_id
+        set selected_worker_id -1
     }
 }

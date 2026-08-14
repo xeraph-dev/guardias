@@ -29,7 +29,8 @@ snit::widget App {
             -revisions [myvar revisions]
         install panel_tabs using ttk::notebook $win.panel_tabs
         install workers_tab using Workers $win.workers_tab \
-            -selected_worker_id [myvar selected_worker_id]
+            -selected_worker_id [myvar selected_worker_id] \
+            -revisions [myvar revisions]
 
         $calendar_tabs add $calendar_tab -text "Guardias"
         $panel_tabs add $workers_tab -text "Plantilla"

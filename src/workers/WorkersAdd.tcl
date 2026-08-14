@@ -5,6 +5,7 @@ snit::widget WorkersAdd {
     component button
 
     option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
+    option -revisions
 
     delegate option * to hull
     delegate method * to hull
@@ -40,8 +41,8 @@ snit::widget WorkersAdd {
 
         if {$selected_worker_id != -1} {
             db eval {UPDATE workers SET name = :name WHERE id = :selected_worker_id}
-            $self CancelEditing
-            event generate $win <<WorkerUpdated>> -data $selected_worker_id -when now
+            set selected_worker_id -1
+            incr $options(-revisions)(workers)
             return
         }
 
@@ -51,12 +52,8 @@ snit::widget WorkersAdd {
         }
         db eval {INSERT INTO workers (name, weight) VALUES (:name, :weight)}
 
-        $self CancelEditing
-        event generate $win <<WorkerCreated>> -when now
-    }
-
-    method CancelEditing {args} {
-        set name ""
+        set selected_worker_id -1
+        incr $options(-revisions)(workers)
     }
 
     method ConfigureSelectedWorkerIdOption {option value} {
@@ -73,7 +70,7 @@ snit::widget WorkersAdd {
 
     method SelectedWorkerIdChanged {args} {
         upvar $options(-selected_worker_id) selected_worker_id
-        $self CancelEditing
+        set name ""
         set text "agregar"
         if {$selected_worker_id != -1} {
             set text "editar"

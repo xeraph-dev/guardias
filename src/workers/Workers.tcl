@@ -9,6 +9,7 @@ snit::widget Workers {
     delegate method * to hull
 
     propagate -selected_worker_id to {add actions list}
+    propagate -revisions to {add actions list}
 
     constructor {args} {
         install add using WorkersAdd $win.add

@@ -4,7 +4,8 @@ snit::widget WorkersList {
     component tree
     component scroll
 
-    option -selected_worker_id
+    option -selected_worker_id -configuremethod ConfigureSelectedworkerIdOption
+    option -revisions -configuremethod ConfigureRevisionsOption
 
     delegate option * to hull
     delegate method * to hull
@@ -18,12 +19,6 @@ snit::widget WorkersList {
         pack $tree -side left -fill both -expand yes
         pack $scroll -side right -fill y
 
-        bind . <<WorkerCreated>> [mymethod Refresh]
-        bind . <<WorkerUpdated>> [mymethod Update %d]
-        bind . <<WorkerDeleted>> [mymethod Delete %d]
-        bind . <<WorkerUp>> [mymethod Up %d]
-        bind . <<WorkerDown>> [mymethod Down %d]
-        bind . <<WorkerEditCanceled>> [mymethod Cancel]
         bind $tree <<TreeviewSelect>> [mymethod Select]
 
         $self configurelist $args
@@ -31,38 +26,39 @@ snit::widget WorkersList {
         $self Refresh
     }
 
+    destructor {
+        try {trace remove variable $options(-revisions)(workers) write [mymethod Refresh]}
+    }
+
+    method ConfigureSelectedworkerIdOption {option value} {
+        set options($option) $value
+        $self SelectedWorkerIdChanged
+        trace add variable $options(-selected_worker_id) write [mymethod SelectedWorkerIdChanged]
+    }
+
+    method ConfigureRevisionsOption {option value} {
+        set options($option) $value
+        trace add variable $options(-revisions)(workers) write [mymethod Refresh]
+    }
+
+    method SelectedWorkerIdChanged {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
+        if {$selected_worker_id == -1} {
+            $tree selection remove [$tree selection]
+        }
+    }
+
     method Refresh {args} {
+        upvar $options(-selected_worker_id) selected_worker_id
+
         $tree delete [$tree children {}]
         db eval {SELECT id, name, weight FROM workers ORDER BY weight ASC} {
             $tree insert {} end -id $id -values [list $id $name $weight]
         }
-    }
 
-    method Update {worker_id} {
-        db eval {SELECT id, name, weight weight FROM workers WHERE id = :worker_id} {
-            $tree item $id -values [list $id $name $weight]
+        if {$options(-selected_worker_id) != "" && $selected_worker_id != -1} {
+            $win.tree selection set $selected_worker_id
         }
-    }
-
-    method Delete {worker_id} {
-        $self Cancel
-        $tree delete $worker_id
-    }
-
-    method Up {worker_id} {
-        set index [$tree index $worker_id]
-        $tree move $worker_id {} [expr {$index - 1}]
-    }
-
-    method Down {worker_id} {
-        set index [$tree index $worker_id]
-        $tree move $worker_id {} [expr {$index + 1}]
-    }
-
-    method Cancel {} {
-        upvar $options(-selected_worker_id) selected_worker_id
-        set selected_worker_id -1
-        $tree selection remove [$tree selection]
     }
 
     method Select {args} {
