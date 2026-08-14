@@ -5,6 +5,7 @@ snit::widget Calendar {
     component grid
 
     delegate option -selected_worker_id to paginator
+    delegate option -calendar_workers to grid
 
     delegate option * to hull
     delegate method * to hull

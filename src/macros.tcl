@@ -1,11 +1,11 @@
 snit::macro propagate {option "to" components} {
     option $option -configuremethod Propagate$option
 
-    set body "\n"
+    set body {}
 
     foreach comp $components {
-        append body "\$$comp configure $option \$value\n"
+        lappend body "\$$comp configure $option \$value"
     }
 
-    method Propagate$option {option value} $body
+    method Propagate$option {option value} [join $body "\n"]
 }

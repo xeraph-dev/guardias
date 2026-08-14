@@ -25,6 +25,13 @@ snit::widget CalendarGrid {
             }
         }
     ]]
+    propagate -calendar_workers to [concat {*}[
+        lmap row [lseq 1 to 6] {
+            lmap col [lseq 1 to 7] {
+                list cell_${row}x${col}
+            }
+        }
+    ]]
 
     constructor {args} {
         set days [lmap day [lseq 1 to 7] {
@@ -57,7 +64,7 @@ snit::widget CalendarGrid {
             grid rowconfigure $win $row -weight 1 -uniform weeks -minsize 80
 
             foreach col [lseq 1 to 7] {
-                grid [set cell_${row}x${col}] -row $row -column $col -padx 1 -pady 1 -sticky nsew
+                grid [set cell_${row}x${col}] -row $row -column $col -sticky nsew
             }
         }
 
@@ -75,10 +82,10 @@ snit::widget CalendarGrid {
     }
 
     method CalendarDateChanged {args} {
-        upvar $options(-calendar_date) date
+        upvar $options(-calendar_date) calendar_date
 
-        set week_day [clock format $date -format %u]
-        set cell_date [clock add $date -[expr {$week_day - 1}] days]
+        set week_day [clock format $calendar_date -format %u]
+        set cell_date [clock add $calendar_date -[expr {$week_day - 1}] days]
 
         foreach row [lseq 1 to 6] {
             [set row_header_${row}] configure -text [clock format $cell_date -format %V]

@@ -29,7 +29,7 @@ wm title . "Guardias"
 image create photo icon -file "res/icon.png"
 wm iconphoto . icon
 
-pack [App .app] -expand yes -fill both -padx 4 -pady 4
+pack [App .app] -expand yes -fill both
 
 update idletasks
 wm minsize . [winfo reqwidth .] [winfo reqheight .]
