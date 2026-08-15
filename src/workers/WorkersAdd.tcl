@@ -11,10 +11,11 @@ snit::widget WorkersAdd {
     delegate method * to hull
 
     variable name {}
+    variable button_text {}
 
     constructor {args} {
         install entry using ttk::entry $win.entry -textvariable [myvar name]
-        install button using ttk::button $win.button -text "agregar" -command [mymethod Save] -state disabled
+        install button using ttk::button $win.button -textvariable [myvar button_text] -command [mymethod Save] -state disabled
 
         pack $entry -side left -fill both -expand yes -padx 4
         pack $button -side left -fill y -padx 4
@@ -52,7 +53,7 @@ snit::widget WorkersAdd {
         }
         db eval {INSERT INTO workers (name, weight) VALUES (:name, :weight)}
 
-        set selected_worker_id -1
+        $self Cancel
         incr $options(-revisions)(workers)
     }
 
@@ -70,15 +71,17 @@ snit::widget WorkersAdd {
 
     method SelectedWorkerIdChanged {args} {
         upvar $options(-selected_worker_id) selected_worker_id
-        set name ""
-        set text "agregar"
+        $self Cancel
         if {$selected_worker_id != -1} {
-            set text "editar"
+            set button_text "editar"
             db eval {SELECT name FROM workers WHERE id = :selected_worker_id} values {
                 set name $values(name)
             }
         }
+    }
 
-        $button configure -text $text
+    method Cancel {} {
+        set name ""
+        set button_text "agregar"
     }
 }

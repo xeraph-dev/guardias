@@ -95,7 +95,8 @@ snit::widget CalendarPaginator {
         upvar $options(-calendar_date) calendar_date
         set month [$month_selector get]
         set year [$year_selector get]
-        set calendar_date [clock scan "01/$month/$year" -format "01/%B/%Y"]
+        set new_calendar_date [clock scan "01/$month/$year" -format "01/%B/%Y"]
+        if {$new_calendar_date != $calendar_date} { set calendar_date $new_calendar_date }
     }
 
     method PrevMonth {args} {

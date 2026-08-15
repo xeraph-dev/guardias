@@ -26,7 +26,7 @@ snit::widget WorkersActions {
     }
 
     destructor {
-        try {trace add variable $options(-selected_worker_id) write [mymethod Refresh]}
+        try {trace remove variable $options(-selected_worker_id) write [mymethod Refresh]}
     }
 
     method ConfigureSelectedWorkerIdOption {option value} {
@@ -187,6 +187,6 @@ snit::widget WorkersActions {
 
     method Cancel {args} {
         upvar $options(-selected_worker_id) selected_worker_id
-        set selected_worker_id -1
+        if {$selected_worker_id != -1} { set selected_worker_id -1 }
     }
 }

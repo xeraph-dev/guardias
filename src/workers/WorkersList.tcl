@@ -72,6 +72,6 @@ snit::widget WorkersList {
 
         set values [$tree item $sel -values]
         lassign $values worker_id
-        set selected_worker_id $worker_id
+        if {$worker_id != $selected_worker_id} { set selected_worker_id $worker_id }
     }
 }

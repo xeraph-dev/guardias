@@ -88,6 +88,6 @@ snit::widget CalendarCell {
 
     method OnClick {args} {
         upvar $options(-selected_date) selected_date
-        set selected_date $options(-cell_date)
+        if {$options(-cell_date) != $selected_date} { set selected_date $options(-cell_date) }
     }
 }
