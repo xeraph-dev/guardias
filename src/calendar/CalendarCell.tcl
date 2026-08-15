@@ -68,6 +68,7 @@ snit::widget CalendarCell {
         set now_date_str [clock format now -format "%d/%m/%Y 00:00:00"]
         set now_date [clock scan $now_date_str -format "%d/%m/%Y %H:%M:%S"]
 
+        $day configure -foreground {}
         if {$calendar_month != $cell_month} { $day configure -foreground grey }
         if {$options(-cell_date) == $now_date} { $day configure -foreground red }
         if {$options(-cell_date) == $selected_date} { $day configure -foreground orange }
