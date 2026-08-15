@@ -6,12 +6,8 @@ snit::widget CalendarPaginator {
     component separator
     component year_selector
     component next_button
-    component assign_button
 
     option -calendar_date -configuremethod ConfigureCalendarDateOption
-    option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
-    option -selected_date -readonly yes -configuremethod ConfigureSelectedDateOption
-    option -revisions
 
     delegate option * to hull
     delegate method * to hull
@@ -27,21 +23,17 @@ snit::widget CalendarPaginator {
         install separator using ttk::label $win.separator -text "-"
         install year_selector using ttk::spinbox $win.year -from 2000 -to 2100 -increment 1 -state readonly -width 8 -command [mymethod UpdateCalendarDate]
         install next_button using ttk::button $win.next -text ">" -command [mymethod NextMonth]
-        install assign_button using ttk::button $win.asign -text "assign" -command [mymethod AssignWorker] -state disabled
 
-        grid $prev_button -row 0 -column 2 -padx 4
-        grid $month_selector -row 0 -column 3 -padx 4
-        grid $separator -row 0 -column 4 -padx 4
-        grid $year_selector -row 0 -column 5 -padx 4
-        grid $next_button -row 0 -column 6 -padx 4
-        grid $assign_button -row 0 -column 8 -padx 4
+        grid $prev_button -row 0 -column 1 -padx 4
+        grid $month_selector -row 0 -column 2 -padx 4
+        grid $separator -row 0 -column 3 -padx 4
+        grid $year_selector -row 0 -column 4 -padx 4
+        grid $next_button -row 0 -column 5 -padx 4
 
-        grid columnconfigure $win 0 -weight 0 -uniform actions
-        grid columnconfigure $win 1 -weight 1 -uniform spacers
-        grid columnconfigure $win 2 -weight 0 -uniform buttons
-        grid columnconfigure $win 6 -weight 0 -uniform buttons
-        grid columnconfigure $win 7 -weight 1 -uniform spacers
-        grid columnconfigure $win 8 -weight 0 -uniform actions
+        grid columnconfigure $win 0 -weight 1 -uniform spacers
+        grid columnconfigure $win 1 -weight 0 -uniform buttons
+        grid columnconfigure $win 5 -weight 0 -uniform buttons
+        grid columnconfigure $win 6 -weight 1 -uniform spacers
 
         bind $month_selector <<ComboboxSelected>> [mymethod UpdateCalendarDate]
 
@@ -50,8 +42,6 @@ snit::widget CalendarPaginator {
 
     destructor {
         try {trace remove variable $options(-calendar_date) write [mymethod CalendarDateChanged]}
-        try {trace remove variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]}
-        try {trace remove variable $options(-selected_date) write [mymethod RefreshAssignButton]}
     }
 
     method ConfigureCalendarDateOption {option value} {
@@ -60,35 +50,10 @@ snit::widget CalendarPaginator {
         trace add variable $options(-calendar_date) write [mymethod CalendarDateChanged]
     }
 
-    method ConfigureSelectedWorkerIdOption {option value} {
-        set options($option) $value
-        $self RefreshAssignButton
-        trace add variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]
-    }
-
-    method ConfigureSelectedDateOption {option value} {
-        set options($option) $value
-        $self RefreshAssignButton
-        trace add variable $options(-selected_date) write [mymethod RefreshAssignButton]
-    }
-
     method CalendarDateChanged {args} {
         upvar $options(-calendar_date) calendar_date
         $month_selector set [clock format $calendar_date -format %B]
         $year_selector set [clock format $calendar_date -format %Y]
-    }
-
-    method RefreshAssignButton {args} {
-        if {$options(-selected_date) == "" || $options(-selected_worker_id) == ""} {return}
-
-        upvar $options(-selected_date) selected_date
-        upvar $options(-selected_worker_id) selected_worker_id
-
-        if {$selected_worker_id != -1 && $selected_date != 0} {
-            $assign_button configure -state normal
-        } else {
-            $assign_button configure -state disabled
-        }
     }
 
     method UpdateCalendarDate {args} {
@@ -107,20 +72,5 @@ snit::widget CalendarPaginator {
     method NextMonth {args} {
         upvar $options(-calendar_date) calendar_date
         set calendar_date [clock add $calendar_date 1 month]
-    }
-
-    method AssignWorker {args} {
-        upvar $options(-selected_date) selected_date
-        upvar $options(-selected_worker_id) selected_worker_id
-        upvar $options(-revisions) revisions
-
-        db eval {
-            INSERT INTO duties (worker_id, date)
-            VALUES (:selected_worker_id, :selected_date)
-            ON CONFLICT (date) DO UPDATE
-            SET worker_id = :selected_worker_id
-        }
-
-        incr revisions(workers)
     }
 }

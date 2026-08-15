@@ -8,6 +8,8 @@ snit::widget Workers {
     component active_list
     component inactive_list
 
+    delegate option -selected_date to actions
+
     delegate option * to hull
     delegate method * to hull
 

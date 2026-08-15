@@ -5,7 +5,11 @@ snit::widget WorkersActions {
     component down
     component delete
     component cancel
+    component assign
+    component frame1
+    component frame2
 
+    option -selected_date -configuremethod ConfigureSelectedDateOption
     option -selected_worker_id -configuremethod ConfigureSelectedWorkerIdOption
     option -revisions
 
@@ -15,24 +19,40 @@ snit::widget WorkersActions {
     variable delete_text {}
 
     constructor {args} {
-        install up using ttk::button $win.up -text "^" -command [mymethod Up] -state disabled
-        install down using ttk::button $win.down -text "v" -command [mymethod Down] -state disabled
-        install delete using ttk::button $win.delete -textvariable [myvar delete_text]  -command [mymethod Delete] -state disabled
-        install cancel using ttk::button $win.cancel -text "cancelar" -command [mymethod Cancel] -state disabled
+        install frame1 using ttk::labelframe $win.frame1 -text "Acciones trabajador"
+        install frame2 using ttk::labelframe $win.frame2 -text "Acciones calendario"
 
-        pack $cancel $delete $down $up -side right -fill y -padx 4
+        install up using ttk::button $win.frame1.up -text "^" -command [mymethod Up] -state disabled
+        install down using ttk::button $win.frame1.down -text "v" -command [mymethod Down] -state disabled
+        install delete using ttk::button $win.frame1.delete -textvariable [myvar delete_text]  -command [mymethod Delete] -state disabled
+        install cancel using ttk::button $win.frame1.cancel -text "cancelar" -command [mymethod Cancel] -state disabled
+        install assign using ttk::button $win.frame2.assign -text "asignar" -command [mymethod Assign] -state disabled
+
+        pack $up $down $delete $cancel -side left -fill y -padx 4
+        pack $assign -side left -fill y -padx 4
+
+        pack $frame1 $frame2 -fill both -pady 4
 
         $self configurelist $args
     }
 
     destructor {
         try {trace remove variable $options(-selected_worker_id) write [mymethod Refresh]}
+        try {trace remove variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]}
+        try {trace remove variable $options(-selected_date) write [mymethod RefreshAssignButton]}
     }
 
     method ConfigureSelectedWorkerIdOption {option value} {
         set options($option) $value
         $self Refresh
         trace add variable $options(-selected_worker_id) write [mymethod Refresh]
+        trace add variable $options(-selected_worker_id) write [mymethod RefreshAssignButton]
+    }
+
+    method ConfigureSelectedDateOption {option value} {
+        set options($option) $value
+        $self RefreshAssignButton
+        trace add variable $options(-selected_date) write [mymethod RefreshAssignButton]
     }
 
     method Refresh {args} {
@@ -70,6 +90,19 @@ snit::widget WorkersActions {
         $cancel configure -state normal
         if {$worker_weight > $lower_weight} {$up configure -state normal}
         if {$worker_weight < $upper_weight} {$down configure -state normal}
+    }
+
+    method RefreshAssignButton {args} {
+        if {$options(-selected_date) == "" || $options(-selected_worker_id) == ""} {return}
+
+        upvar $options(-selected_date) selected_date
+        upvar $options(-selected_worker_id) selected_worker_id
+
+        if {$selected_worker_id != -1 && $selected_date != 0} {
+            $assign configure -state normal
+        } else {
+            $assign configure -state disabled
+        }
     }
 
     method Up {args} {
@@ -188,5 +221,20 @@ snit::widget WorkersActions {
     method Cancel {args} {
         upvar $options(-selected_worker_id) selected_worker_id
         if {$selected_worker_id != -1} { set selected_worker_id -1 }
+    }
+
+    method Assign {args} {
+        upvar $options(-selected_date) selected_date
+        upvar $options(-selected_worker_id) selected_worker_id
+        upvar $options(-revisions) revisions
+
+        db eval {
+            INSERT INTO duties (worker_id, date)
+            VALUES (:selected_worker_id, :selected_date)
+            ON CONFLICT (date) DO UPDATE
+            SET worker_id = :selected_worker_id
+        }
+
+        incr revisions(workers)
     }
 }

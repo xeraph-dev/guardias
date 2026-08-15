@@ -13,8 +13,9 @@ snit::widget App {
         workers 0
     }
 
-    variable calendar_date {}
+    variable selected_date 0
     variable selected_worker_id -1
+    variable calendar_date {}
     variable calendar_workers {}
 
     constructor {args} {
@@ -23,12 +24,12 @@ snit::widget App {
 
         install calendar_tabs using ttk::notebook $win.calendar_tabs
         install duties_tab using Calendar $win.duties_tab \
+            -selected_date [myvar selected_date] \
             -calendar_date [myvar calendar_date] \
-            -selected_worker_id [myvar selected_worker_id] \
-            -calendar_workers [myvar calendar_workers] \
-            -revisions [myvar revisions]
+            -calendar_workers [myvar calendar_workers]
         install panel_tabs using ttk::notebook $win.panel_tabs
         install workers_tab using Workers $win.workers_tab \
+            -selected_date [myvar selected_date] \
             -selected_worker_id [myvar selected_worker_id] \
             -revisions [myvar revisions]
 
