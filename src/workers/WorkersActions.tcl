@@ -43,15 +43,15 @@ snit::widget WorkersActions {
         $delete configure -state disabled
         $cancel configure -state disabled
 
-        set worker_active 0
         set delete_text "dar baja"
         set upper_weight 0
         set lower_weight 0
         set worker_weight 0
+        set worker_active 0
 
         if {$selected_worker_id == -1} {return}
 
-        db eval {SELECT active, weight FROM workers WHERE id = :selected_worker_id} {
+        db eval {SELECT weight, active FROM workers WHERE id = :selected_worker_id} {
             set worker_weight $weight
             set worker_active $active
         }
@@ -61,6 +61,8 @@ snit::widget WorkersActions {
         db eval {SELECT weight FROM workers WHERE active = :worker_active ORDER BY weight DESC LIMIT 1} {
             set upper_weight $weight
         }
+
+        puts "$selected_worker_id | $worker_weight"
 
         if {!$worker_active} { set delete_text "eliminar" }
 
@@ -73,17 +75,19 @@ snit::widget WorkersActions {
     method Up {args} {
         upvar $options(-selected_worker_id) selected_worker_id
 
-        db eval {SELECT id, weight FROM workers WHERE id = :selected_worker_id} {
+        db eval {SELECT id, weight, active FROM workers WHERE id = :selected_worker_id} {
             db transaction {
                 db eval {
                     UPDATE workers
                     SET weight = :weight
                     WHERE weight = :weight - 1
+                      and active = :active
                 }
                 db eval {
                     UPDATE workers
                     SET weight = :weight - 1
                     WHERE id = :id
+                      AND active = :active
                 }
             }
         }
@@ -95,17 +99,19 @@ snit::widget WorkersActions {
     method Down {args} {
         upvar $options(-selected_worker_id) selected_worker_id
 
-        db eval {SELECT id, weight FROM workers WHERE id = :selected_worker_id} {
+        db eval {SELECT id, weight, active FROM workers WHERE id = :selected_worker_id} {
             db transaction {
                 db eval {
                     UPDATE workers
                     SET weight = :weight
                     WHERE weight = :weight + 1
+                      AND active = :active
                 }
                 db eval {
                     UPDATE workers
                     SET weight = :weight + 1
                     WHERE id = :id
+                      AND active = :active
                 }
             }
         }
@@ -130,10 +136,28 @@ snit::widget WorkersActions {
 
     method SoftDelete {id name} {
         if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
-            db eval {
-                UPDATE workers
-                SET active = FALSE
-                WHERE id = :id
+            db transaction {
+                set weight 0
+                db eval {SELECT weight FROM workers WHERE NOT active ORDER BY weight DESC LIMIT 1} values {
+                    set weight [expr {$values(weight) + 1}]
+                }
+
+                db eval {
+                    UPDATE workers
+                    SET active = FALSE,
+                        weight = :weight
+                    WHERE id = :id
+                }
+
+                set weight 0
+                db eval {SELECT id FROM workers WHERE active ORDER BY weight ASC} {
+                    db eval {
+                        UPDATE workers
+                        SET weight = :weight
+                        WHERE id = :id
+                    }
+                    incr weight
+                }
             }
             $self Cancel
             incr $options(-revisions)(workers)
@@ -142,7 +166,20 @@ snit::widget WorkersActions {
 
     method HardDelete {id name} {
         if {[tk_messageBox -type yesno -icon question -title "Borrar" -message "¿Seguro que desea borrar a $name? Esto también borrará todo su registro histórico"] == yes} {
-            db eval {DELETE FROM workers WHERE id = :id}
+
+            db transaction {
+                db eval {DELETE FROM workers WHERE id = :id}
+
+                set weight 0
+                db eval {SELECT id FROM workers WHERE NOT active ORDER BY weight ASC} {
+                    db eval {
+                        UPDATE workers
+                        SET weight = :weight
+                        WHERE id = :id
+                    }
+                    incr weight
+                }
+            }
             $self Cancel
             incr $options(-revisions)(workers)
         }
