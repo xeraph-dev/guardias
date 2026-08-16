@@ -82,7 +82,7 @@ snit::widget WorkersActions {
             set upper_weight $weight
         }
 
-        if {!$worker_active} { set delete_text "eliminar" }
+        if {!$worker_active} { set delete_text "borrar" }
 
         $delete configure -state normal
         $cancel configure -state normal
@@ -168,8 +168,18 @@ snit::widget WorkersActions {
     }
 
     method SoftDelete {id name} {
-        if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name?"] == yes} {
+        if {[tk_messageBox -type yesno -icon question -title "Dar de baja" -message "¿Seguro que desea dar de baja a $name? Todas sus guardias y vacaciones planificadas serán eliminadas"] == yes} {
             db transaction {
+                set tomorrow [clock format now -format "%d/%m/%Y 00:00:00"]
+                set tomorrow_date [clock scan $tomorrow -format "%d/%m/%Y %H:%M:%S"]
+                set tomorrow_date [clock add $tomorrow_date 1 day]
+
+                db eval {
+                    DELETE FROM schedules
+                    WHERE worker_id = :id
+                        AND date >= :tomorrow_date
+                }
+
                 set weight 0
                 db eval {SELECT weight FROM workers WHERE NOT active ORDER BY weight DESC LIMIT 1} values {
                     set weight [expr {$values(weight) + 1}]
@@ -198,9 +208,11 @@ snit::widget WorkersActions {
     }
 
     method HardDelete {id name} {
-        if {[tk_messageBox -type yesno -icon question -title "Borrar" -message "¿Seguro que desea borrar a $name? Esto también borrará todo su registro histórico"] == yes} {
+        if {[tk_messageBox -type yesno -icon question -title "Borrar" -message "¿Seguro que desea borrar a $name? Esto borrará todo su registro histórico"] == yes} {
 
             db transaction {
+                db eval {DELETE FROM schedules WHERE worker_id = :id}
+
                 db eval {DELETE FROM workers WHERE id = :id}
 
                 set weight 0
@@ -229,7 +241,7 @@ snit::widget WorkersActions {
         upvar $options(-revisions) revisions
 
         db eval {
-            INSERT INTO duties (worker_id, date)
+            INSERT INTO schedules (worker_id, date)
             VALUES (:selected_worker_id, :selected_date)
             ON CONFLICT (date) DO UPDATE
             SET worker_id = :selected_worker_id

@@ -3,7 +3,7 @@ snit::widget App {
 
     component calendar_tabs
     component panel_tabs
-    component duties_tab
+    component schedules_tab
     component workers_tab
 
     delegate option * to hull
@@ -20,7 +20,7 @@ snit::widget App {
 
     constructor {args} {
         install calendar_tabs using ttk::notebook $win.calendar_tabs -padding 12
-        install duties_tab using Calendar $win.duties_tab \
+        install schedules_tab using Calendar $win.schedules_tab \
             -selected_date [myvar selected_date] \
             -calendar_date [myvar calendar_date] \
             -calendar_workers [myvar calendar_workers]
@@ -30,7 +30,7 @@ snit::widget App {
             -selected_worker_id [myvar selected_worker_id] \
             -revisions [myvar revisions]
 
-        $calendar_tabs add $duties_tab -text "Guardias"
+        $calendar_tabs add $schedules_tab -text "Guardias"
 
         $panel_tabs add $workers_tab -text "Plantilla"
 
@@ -57,8 +57,8 @@ snit::widget App {
 
         set workers {}
         db eval {
-            SELECT workers.id, workers.name, duties.date FROM duties
-            INNER JOIN workers ON workers.id = duties.worker_id
+            SELECT workers.id, workers.name, schedules.date FROM schedules
+            INNER JOIN workers ON workers.id = schedules.worker_id
             WHERE date BETWEEN :first_month_day_date AND :last_month_day_date
         } {
             dict set workers $date $id $name

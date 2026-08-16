@@ -25,7 +25,7 @@ if {$version == 0} {
         }
 
         db eval {
-            CREATE TABLE IF NOT EXISTS duties (
+            CREATE TABLE IF NOT EXISTS schedules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 worker_id INTEGER NOT NULL REFERENCES workers (id),
                 date TEXT UNIQUE NOT NULL
