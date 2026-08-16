@@ -33,3 +33,8 @@ pack [App .app] -expand yes -fill both
 
 update idletasks
 wm minsize . [winfo reqwidth .] [winfo reqheight .]
+
+wm protocol . WM_DELETE_WINDOW {
+    db close
+    destroy .
+}
