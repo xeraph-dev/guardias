@@ -53,13 +53,16 @@ snit::widget App {
     method RefreshCalendarWorkers {args} {
         set first_month_day [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
         set first_month_day_date [clock scan $first_month_day -format "%d/%m/%Y %H:%M:%S"]
-        set last_month_day_date [clock add $first_month_day_date 1 month -1 day]
+
+        set week_day [clock format $first_month_day_date -format %u]
+        set first_date [clock add $first_month_day_date -[expr {$week_day - 1}] days]
+        set last_date [clock add $first_date 41 days]
 
         set workers {}
         db eval {
             SELECT workers.id, workers.name, schedules.date FROM schedules
             INNER JOIN workers ON workers.id = schedules.worker_id
-            WHERE date BETWEEN :first_month_day_date AND :last_month_day_date
+            WHERE date BETWEEN :first_date AND :last_date
         } {
             dict set workers $date $id $name
         }

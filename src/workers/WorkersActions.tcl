@@ -209,7 +209,6 @@ snit::widget WorkersActions {
 
     method HardDelete {id name} {
         if {[tk_messageBox -type yesno -icon question -title "Borrar" -message "¿Seguro que desea borrar a $name? Esto borrará todo su registro histórico"] == yes} {
-
             db transaction {
                 db eval {DELETE FROM schedules WHERE worker_id = :id}
 

@@ -20,7 +20,7 @@ source src/calendar/CalendarGrid.tcl
 source src/calendar/CalendarPaginator.tcl
 
 source src/workers/Workers.tcl
-source src/Workers/WorkersActions.tcl
+source src/workers/WorkersActions.tcl
 source src/workers/WorkersAdd.tcl
 source src/workers/WorkersList.tcl
 
