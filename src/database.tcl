@@ -34,6 +34,15 @@ if {$version == 0} {
             ) STRICT
         }
 
+        db eval {
+            CREATE TABLE IF NOT EXISTS vacations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                worker_id INTEGER NOT NULL REFERENCES workers (id),
+                from_date TEXT NOT NULL,
+                to_date TEXT NOT NULL
+            ) STRICT
+        }
+
         incr version
 
         db eval {UPDATE migrations SET version = :version}
