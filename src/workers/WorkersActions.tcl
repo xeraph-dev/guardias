@@ -96,7 +96,9 @@ snit::widget WorkersActions {
         upvar $options(-selected_date) selected_date
         upvar $options(-selected_worker_id) selected_worker_id
 
-        if {$selected_worker_id != -1 && $selected_date != 0} {
+        set worker_active [db onecolumn {SELECT active FROM workers WHERE id = :selected_worker_id}]
+
+        if {$selected_worker_id != -1 && $worker_active && $selected_date != 0} {
             $assign configure -state normal
         } else {
             $assign configure -state disabled
