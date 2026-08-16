@@ -1,4 +1,6 @@
 db eval {PRAGMA foreign_keys = ON}
+db eval {PRAGMA journal_mode = WAL}
+db eval {PRAGMA synchronous = NORMAL}
 
 db eval {
     CREATE TABLE IF NOT EXISTS migrations (
