@@ -82,8 +82,6 @@ snit::widget WorkersActions {
             set upper_weight $weight
         }
 
-        puts "$selected_worker_id | $worker_weight"
-
         if {!$worker_active} { set delete_text "eliminar" }
 
         $delete configure -state normal

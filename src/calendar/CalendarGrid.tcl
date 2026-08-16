@@ -77,6 +77,11 @@ snit::widget CalendarGrid {
 
     method ConfigureCalendarDateOption {option value} {
         set options($option) $value
+        foreach row [lseq 1 to 6] {
+            foreach col [lseq 1 to 7] {
+                [set cell_${row}x${col}] configure -calendar_date $options(-calendar_date)
+            }
+        }
         $self CalendarDateChanged
         trace add variable $options(-calendar_date) write [mymethod CalendarDateChanged]
     }
@@ -84,15 +89,17 @@ snit::widget CalendarGrid {
     method CalendarDateChanged {args} {
         upvar $options(-calendar_date) calendar_date
 
-        set week_day [clock format $calendar_date -format %u]
-        set cell_date [clock add $calendar_date -[expr {$week_day - 1}] days]
+        set first_month_day [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
+        set first_month_day_date [clock scan $first_month_day -format "%d/%m/%Y %H:%M:%S"]
+
+        set week_day [clock format $first_month_day_date -format %u]
+        set cell_date [clock add $first_month_day_date -[expr {$week_day - 1}] days]
 
         foreach row [lseq 1 to 6] {
             [set row_header_${row}] configure -text [clock format $cell_date -format %V]
 
             foreach col [lseq 1 to 7] {
-                [set cell_${row}x${col}] configure -calendar_date $options(-calendar_date) -cell_date $cell_date
-
+                [set cell_${row}x${col}] configure -cell_date $cell_date
                 set cell_date [clock add $cell_date 1 day]
             }
         }

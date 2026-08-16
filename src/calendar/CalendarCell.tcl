@@ -19,8 +19,8 @@ snit::widget CalendarCell {
         install day using ttk::label $win.day -textvariable [myvar day_text]
         install names using ttk::label $win.names -textvariable [myvar names_text] -foreground cyan
 
-        pack $day -side right -anchor n -padx 4 -pady 4
-        pack $names -side left -anchor center -padx 4
+        pack $day -anchor ne -padx 4 -pady 4
+        pack $names -anchor center -padx 4
 
         bind $win <Button-1> [mymethod OnClick]
         bind $day <Button-1> [mymethod OnClick]
@@ -30,8 +30,8 @@ snit::widget CalendarCell {
     }
 
     destructor {
-        try {trace remove variable $options(-calendar_date) write [mymethod RefreshDates]}
         try {trace remove variable $options(-selected_date) write [mymethod RefreshDates]}
+        try {trace remove variable $options(-calendar_workers) write [mymethod RefreshCalendarWorkersNames]}
     }
 
     method ConfigureSelectedDateOption {option value} {
@@ -52,7 +52,7 @@ snit::widget CalendarCell {
     }
 
     method RefreshDates {args} {
-        if {$options(-cell_date) == {}} { return }
+        if {$options(-calendar_date) == {} || $options(-cell_date) == {}} { return }
 
         upvar $options(-calendar_date) calendar_date
         upvar $options(-selected_date) selected_date
@@ -72,18 +72,21 @@ snit::widget CalendarCell {
         if {$calendar_month != $cell_month} { $day configure -foreground grey }
         if {$options(-cell_date) == $now_date} { $day configure -foreground red }
         if {$options(-cell_date) == $selected_date} { $day configure -foreground orange }
+
+        $self RefreshCalendarWorkersNames
     }
 
     method RefreshCalendarWorkersNames {args} {
+        if {$options(-calendar_workers) == {}} {return}
         upvar $options(-calendar_workers) calendar_workers
 
+        set workers_names {}
         if {[dict exists $calendar_workers $options(-cell_date)]} {
-            set names {}
-            dict for {id name} [dict get $calendar_workers $options(-cell_date)] {
-                lappend names $name
+            dict for {worker_id worker_name} [dict get $calendar_workers $options(-cell_date)] {
+                lappend workers_names $worker_name
             }
-            set names_text [join $names "\n"]
         }
+        set names_text [join $workers_names "\n"]
     }
 
     method OnClick {args} {

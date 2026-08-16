@@ -1,10 +1,9 @@
 snit::widget CalendarPaginator {
     hulltype ttk::frame
 
+    component title_label
     component prev_button
-    component month_selector
-    component separator
-    component year_selector
+    component today_button
     component next_button
 
     option -calendar_date -configuremethod ConfigureCalendarDateOption
@@ -12,30 +11,16 @@ snit::widget CalendarPaginator {
     delegate option * to hull
     delegate method * to hull
 
+    variable title_text ""
+
     constructor {args} {
-        set months [lmap month [lseq 1 to 12] {
-            set time [clock scan $month -format %N]
-            clock format $time -format %B
-        }]
+        install title_label using ttk::label $win.title_button -textvariable [myvar title_text]
+        install prev_button using ttk::button $win.prev_button -text "<" -command [mymethod PrevMonth]
+        install today_button using ttk::button $win.today_button -text "hoy" -command [mymethod Today]
+        install next_button using ttk::button $win.next_button -text ">" -command [mymethod NextMonth]
 
-        install prev_button using ttk::button $win.prev -text "<" -command [mymethod PrevMonth]
-        install month_selector using ttk::combobox $win.month -values $months -state readonly -width 8
-        install separator using ttk::label $win.separator -text "-"
-        install year_selector using ttk::spinbox $win.year -from 2000 -to 2100 -increment 1 -state readonly -width 8 -command [mymethod UpdateCalendarDate]
-        install next_button using ttk::button $win.next -text ">" -command [mymethod NextMonth]
-
-        grid $prev_button -row 0 -column 1 -padx 4
-        grid $month_selector -row 0 -column 2 -padx 4
-        grid $separator -row 0 -column 3 -padx 4
-        grid $year_selector -row 0 -column 4 -padx 4
-        grid $next_button -row 0 -column 5 -padx 4
-
-        grid columnconfigure $win 0 -weight 1 -uniform spacers
-        grid columnconfigure $win 1 -weight 0 -uniform buttons
-        grid columnconfigure $win 5 -weight 0 -uniform buttons
-        grid columnconfigure $win 6 -weight 1 -uniform spacers
-
-        bind $month_selector <<ComboboxSelected>> [mymethod UpdateCalendarDate]
+        pack $title_label -side left -fill both -expand true -padx 4
+        pack $prev_button $today_button $next_button -side left -fill both -padx 4
 
         $self configurelist $args
     }
@@ -52,16 +37,9 @@ snit::widget CalendarPaginator {
 
     method CalendarDateChanged {args} {
         upvar $options(-calendar_date) calendar_date
-        $month_selector set [clock format $calendar_date -format %B]
-        $year_selector set [clock format $calendar_date -format %Y]
-    }
-
-    method UpdateCalendarDate {args} {
-        upvar $options(-calendar_date) calendar_date
-        set month [$month_selector get]
-        set year [$year_selector get]
-        set new_calendar_date [clock scan "01/$month/$year" -format "01/%B/%Y"]
-        if {$new_calendar_date != $calendar_date} { set calendar_date $new_calendar_date }
+        set month [clock format $calendar_date -format %B]
+        set year [clock format $calendar_date -format %Y]
+        set title_text "$month $year"
     }
 
     method PrevMonth {args} {
@@ -72,5 +50,11 @@ snit::widget CalendarPaginator {
     method NextMonth {args} {
         upvar $options(-calendar_date) calendar_date
         set calendar_date [clock add $calendar_date 1 month]
+    }
+
+    method Today {args} {
+        upvar $options(-calendar_date) calendar_date
+        set calendar_date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
+        set calendar_date [clock scan $calendar_date_str -format "%d/%m/%Y %H:%M:%S"]
     }
 }

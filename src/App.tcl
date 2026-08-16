@@ -15,19 +15,16 @@ snit::widget App {
 
     variable selected_date 0
     variable selected_worker_id -1
-    variable calendar_date {}
+    variable calendar_date [clock seconds]
     variable calendar_workers {}
 
     constructor {args} {
-        set calendar_date_str [clock format [clock seconds] -format "01/%m/%Y 00:00:00"]
-        set calendar_date [clock scan $calendar_date_str -format "%d/%m/%Y %H:%M:%S"]
-
-        install calendar_tabs using ttk::notebook $win.calendar_tabs
+        install calendar_tabs using ttk::notebook $win.calendar_tabs -padding 12
         install duties_tab using Calendar $win.duties_tab \
             -selected_date [myvar selected_date] \
             -calendar_date [myvar calendar_date] \
             -calendar_workers [myvar calendar_workers]
-        install panel_tabs using ttk::notebook $win.panel_tabs
+        install panel_tabs using ttk::notebook $win.panel_tabs -padding {0 12 12 12}
         install workers_tab using Workers $win.workers_tab \
             -selected_date [myvar selected_date] \
             -selected_worker_id [myvar selected_worker_id] \
@@ -44,16 +41,18 @@ snit::widget App {
 
         $self RefreshCalendarWorkers
 
+        trace add variable calendar_date write [mymethod RefreshCalendarWorkers]
         trace add variable revisions(workers) write [mymethod RefreshCalendarWorkers]
     }
 
     destructor {
+        try {trace remove variable calendar_date write [mymethod RefreshCalendarWorkers]}
         try {trace remove variable revisions(workers) write [mymethod RefreshCalendarWorkers]}
     }
 
     method RefreshCalendarWorkers {args} {
-        set first_month_day_date_str [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
-        set first_month_day_date [clock scan $first_month_day_date_str -format "%d/%m/%Y %H:%M:%S"]
+        set first_month_day [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
+        set first_month_day_date [clock scan $first_month_day -format "%d/%m/%Y %H:%M:%S"]
         set last_month_day_date [clock add $first_month_day_date 1 month -1 day]
 
         set workers {}
