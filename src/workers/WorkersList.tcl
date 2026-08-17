@@ -12,10 +12,9 @@ snit::widget WorkersList {
     delegate method * to hull
 
     constructor {args} {
-        install tree using ttk::treeview $win.tree -columns {id name weight} -displaycolumns {name} -show {}
+        install tree using ttk::treeview $win.tree -columns {id name weight} -displaycolumns {name} -show {} -selectmode browse
         install scroll using ttk::scrollbar $win.scroll -orient vertical -command [list $tree yview]
         $tree configure -yscrollcommand [list $scroll set]
-        $tree configure -selectmode browse
 
         pack $tree -side left -fill both -expand yes
         pack $scroll -side right -fill y
@@ -51,7 +50,6 @@ snit::widget WorkersList {
 
     method Refresh {args} {
         upvar $options(-selected_worker_id) selected_worker_id
-
 
         set active [expr {bool($options(-active))}]
         $tree delete [$tree children {}]

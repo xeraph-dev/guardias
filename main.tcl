@@ -24,6 +24,8 @@ source src/workers/WorkersActions.tcl
 source src/workers/WorkersAdd.tcl
 source src/workers/WorkersList.tcl
 
+source src/summary/Summary.tcl
+
 wm title . "Guardias"
 
 image create photo icon -file "res/icon.png"

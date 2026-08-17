@@ -5,6 +5,7 @@ snit::widget App {
     component panel_tabs
     component schedules_tab
     component workers_tab
+    component summary_tab
 
     delegate option * to hull
     delegate method * to hull
@@ -29,9 +30,13 @@ snit::widget App {
             -selected_date [myvar selected_date] \
             -selected_worker_id [myvar selected_worker_id] \
             -revisions [myvar revisions]
+        install summary_tab using Summary $win.summary_tab \
+            -calendar_date [myvar calendar_date] \
+            -revisions [myvar revisions]
 
         $calendar_tabs add $schedules_tab -text "Guardias"
 
+        $panel_tabs add $summary_tab -text "Resumen"
         $panel_tabs add $workers_tab -text "Plantilla"
 
         pack $calendar_tabs -side left -fill both -expand yes
