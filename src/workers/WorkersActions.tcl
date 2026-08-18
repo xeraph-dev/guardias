@@ -24,7 +24,7 @@ snit::widget WorkersActions {
 
         install up using ttk::button $win.frame1.up -text "^" -command [mymethod Up] -state disabled
         install down using ttk::button $win.frame1.down -text "v" -command [mymethod Down] -state disabled
-        install delete using ttk::button $win.frame1.delete -textvariable [myvar delete_text]  -command [mymethod Delete] -state disabled
+        install delete using ttk::button $win.frame1.delete -text "dar baja" -textvariable [myvar delete_text]  -command [mymethod Delete] -state disabled
         install cancel using ttk::button $win.frame1.cancel -text "cancelar" -command [mymethod Cancel] -state disabled
         install assign using ttk::button $win.frame2.assign -text "asignar" -command [mymethod Assign] -state disabled
 

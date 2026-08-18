@@ -25,7 +25,7 @@ snit::widget App {
             -selected_date [myvar selected_date] \
             -calendar_date [myvar calendar_date] \
             -calendar_workers [myvar calendar_workers]
-        install panel_tabs using ttk::notebook $win.panel_tabs -padding {0 12 12 12}
+        install panel_tabs using ttk::notebook $win.panel_tabs -padding {0 12 12 12} -width 300
         install workers_tab using Workers $win.workers_tab \
             -selected_date [myvar selected_date] \
             -selected_worker_id [myvar selected_worker_id] \

@@ -17,7 +17,7 @@ snit::widget CalendarCell {
 
     constructor {args} {
         install day using ttk::label $win.day -textvariable [myvar day_text]
-        install names using ttk::label $win.names -textvariable [myvar names_text] -foreground cyan
+        install names using ttk::label $win.names -textvariable [myvar names_text] -foreground cyan -wraplength 80
 
         pack $day -anchor ne -padx 4 -pady 4
         pack $names -anchor center -padx 4
