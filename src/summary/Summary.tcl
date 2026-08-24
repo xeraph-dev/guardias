@@ -15,7 +15,7 @@ snit::widget Summary {
         install scroll using ttk::scrollbar $win.scroll -orient vertical -command [list $tree yview]
         $tree configure -yscrollcommand [list $scroll set]
         $tree heading name -text "Trabajador"
-        $tree heading duties -text "Vacaciones"
+        $tree heading duties -text "Guardias"
         $tree column name -minwidth 80
         $tree column duties -minwidth 80 -width 80
         $tree column duties -anchor e
