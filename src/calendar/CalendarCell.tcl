@@ -17,7 +17,7 @@ snit::widget CalendarCell {
 
     constructor {args} {
         install day using ttk::label $win.day -textvariable [myvar day_text]
-        install names using ttk::label $win.names -textvariable [myvar names_text] -foreground cyan -wraplength 80
+        install names using ttk::label $win.names -textvariable [myvar names_text] -wraplength 80
 
         pack $day -anchor ne -padx 4 -pady 4
         pack $names -anchor center -padx 4
@@ -68,14 +68,16 @@ snit::widget CalendarCell {
         set now_date_str [clock format now -format "%d/%m/%Y 00:00:00"]
         set now_date [clock scan $now_date_str -format "%d/%m/%Y %H:%M:%S"]
 
-        $day configure -foreground {}
-        if {$calendar_month != $cell_month} { $day configure -foreground grey }
-        if {$options(-cell_date) == $now_date} { $day configure -foreground red }
-        if {$options(-cell_date) == $selected_date} { $day configure -foreground orange }
+        set foreground {}
+        if {$calendar_month != $cell_month} { set foreground grey }
+        if {$options(-cell_date) == $now_date} { set foreground red }
+        if {$options(-cell_date) == $selected_date} { set foreground orange }
+
+        $day configure -foreground $foreground
+        $names configure -foreground $foreground
 
         $self RefreshCalendarWorkersNames
     }
-
     method RefreshCalendarWorkersNames {args} {
         if {$options(-calendar_workers) == {}} {return}
         upvar $options(-calendar_workers) calendar_workers

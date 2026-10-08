@@ -1,37 +1,41 @@
-set app_dir [file dirname [info script]]
-lappend auto_path [file join $app_dir lib]
-
 package require snit
 package require sqlite3
-package require defer
+package require msgcat
 
-namespace import defer::defer
+namespace import msgcat::*
 
-sqlite3 db "guardias.db"
+const APP_DIR [file dirname [info script]]
+const SRC_DIR [file join $APP_DIR src]
+const RES_DIR [file join $APP_DIR res]
+const MSGS_DIR [file join $APP_DIR msgs]
+const MIGRATIONS_DIR [file join $APP_DIR migrations]
+const ICON_FILE [file join $RES_DIR icon.png]
+const DB_FILE guardias.db
 
-source [file join $app_dir src database.tcl]
+proc source-files {dir} {
+    foreach file [glob -directory $dir *.tcl] {
+        source $file
+    }
+    foreach dir [glob -directory $dir -types d *] {
+        source-files $dir
+    }
+}
 
-source [file join $app_dir src macros.tcl]
+source-files $SRC_DIR
+source-files $MIGRATIONS_DIR
 
-source [file join $app_dir src database.tcl]
+sqlite3 db [file join [pwd] $DB_FILE]
 
-source [file join $app_dir src App.tcl]
+db eval {PRAGMA foreign_keys = ON}
+db eval {PRAGMA journal_mode = WAL}
+db eval {PRAGMA synchronous = NORMAL}
 
-source [file join $app_dir src calendar Calendar.tcl]
-source [file join $app_dir src calendar CalendarCell.tcl]
-source [file join $app_dir src calendar CalendarGrid.tcl]
-source [file join $app_dir src calendar CalendarPaginator.tcl]
+mcload $MSGS_DIR
+migrations run_pending
 
-source [file join $app_dir src workers Workers.tcl]
-source [file join $app_dir src workers WorkersActions.tcl]
-source [file join $app_dir src workers WorkersAdd.tcl]
-source [file join $app_dir src workers WorkersList.tcl]
+wm title . [mc window.title]
 
-source [file join $app_dir src summary Summary.tcl]
-
-wm title . "Guardias"
-
-image create photo icon -file [file join $app_dir res icon.png]
+image create photo icon -file $ICON_FILE
 wm iconphoto . icon
 
 pack [App .app] -expand yes -fill both
