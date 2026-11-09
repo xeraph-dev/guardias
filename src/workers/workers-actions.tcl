@@ -1,4 +1,4 @@
-snit::widget WorkersActions {
+snit::widget workers-actions {
     hulltype ttk::frame
 
     component up

@@ -1,4 +1,4 @@
-snit::widget CalendarGrid {
+snit::widget calendar-grid {
     hulltype ttk::frame
 
     foreach col [lseq 1 to 7] {
@@ -48,7 +48,7 @@ snit::widget CalendarGrid {
             install row_header_${row} using ttk::label $win.hrow_$row
 
             foreach col [lseq 1 to 7] {
-                install cell_${row}x${col} using CalendarCell $win.cell_${row}x${col} -relief solid -borderwidth 2
+                install cell_${row}x${col} using calendar-cell $win.cell_${row}x${col} -relief solid -borderwidth 2
             }
         }
 

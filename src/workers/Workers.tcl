@@ -1,4 +1,4 @@
-snit::widget Workers {
+snit::widget workers {
     hulltype ttk::frame
 
     component add
@@ -17,12 +17,12 @@ snit::widget Workers {
     propagate -revisions to {add actions active_list inactive_list}
 
     constructor {args} {
-        install add using WorkersAdd $win.add
-        install actions using WorkersActions $win.actions
+        install add using workers-add $win.add
+        install actions using workers-actions $win.actions
         install active using ttk::labelframe $win.active -text "Trabajadores activos"
         install inactive using ttk::labelframe $win.inactive -text "Trabajadores de baja"
-        install active_list using WorkersList $active.list -active yes
-        install inactive_list using WorkersList $inactive.list -active no
+        install active_list using workers-list $active.list -active yes
+        install inactive_list using workers-list $inactive.list -active no
 
         pack $active_list -fill both -expand yes
         pack $inactive_list -fill both -expand yes

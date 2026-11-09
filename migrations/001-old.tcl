@@ -1,4 +1,4 @@
-migrations register 0 {
+migrations register 1 {
     db eval {
         CREATE TABLE IF NOT EXISTS workers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

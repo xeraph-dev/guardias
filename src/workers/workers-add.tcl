@@ -1,4 +1,4 @@
-snit::widget WorkersAdd {
+snit::widget workers-add {
     hulltype ttk::frame
 
     component entry

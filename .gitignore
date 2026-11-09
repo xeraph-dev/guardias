@@ -1,2 +1,2 @@
-*.db*
-build/
+# distribution files
+dist

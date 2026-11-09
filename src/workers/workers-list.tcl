@@ -1,4 +1,4 @@
-snit::widget WorkersList {
+snit::widget workers-list {
     hulltype ttk::frame
 
     component tree

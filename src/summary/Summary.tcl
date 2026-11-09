@@ -1,4 +1,4 @@
-snit::widget Summary {
+snit::widget summary {
     hulltype ttk::frame
 
     component tree

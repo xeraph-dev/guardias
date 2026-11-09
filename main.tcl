@@ -1,44 +1,44 @@
+const APP_DIR [file dirname [info script]]
+const APP_NAME guardias
+const DEFAULT_LOCALE es
+
+foreach dir {{} tcllib tklib} {lappend auto_path [file join $APP_DIR lib $dir]}
+
 package require snit
 package require sqlite3
 package require msgcat
 
 namespace import msgcat::*
 
-const APP_DIR [file dirname [info script]]
-const SRC_DIR [file join $APP_DIR src]
-const RES_DIR [file join $APP_DIR res]
-const MSGS_DIR [file join $APP_DIR msgs]
-const MIGRATIONS_DIR [file join $APP_DIR migrations]
-const ICON_FILE [file join $RES_DIR icon.png]
-const DB_FILE guardias.db
-
-proc source-files {dir} {
-    foreach file [glob -directory $dir *.tcl] {
-        source $file
-    }
-    foreach dir [glob -directory $dir -types d *] {
-        source-files $dir
-    }
+proc source_files {dir} {
+    foreach file [lsort [glob -nocomplain -directory $dir -types f *.tcl]]  {source $file}
+    foreach sub  [lsort [glob -nocomplain -directory $dir -types d *]]      {source_files $sub}
 }
 
-source-files $SRC_DIR
-source-files $MIGRATIONS_DIR
+foreach dir {src migrations} {source_files [file join $APP_DIR $dir]}
 
-sqlite3 db [file join [pwd] $DB_FILE]
+const DATA_DIR [get_data_dir]
+file mkdir $DATA_DIR
+
+sqlite3 db [file join $DATA_DIR $APP_NAME.db]
 
 db eval {PRAGMA foreign_keys = ON}
 db eval {PRAGMA journal_mode = WAL}
 db eval {PRAGMA synchronous = NORMAL}
 
-mcload $MSGS_DIR
 migrations run_pending
+
+if {![mcload [file join $APP_DIR msgs]]} {
+    mclocale $DEFAULT_LOCALE
+    mcload [file join $APP_DIR msgs]
+}
 
 wm title . [mc window.title]
 
-image create photo icon -file $ICON_FILE
-wm iconphoto . icon
+image create photo app-icon -file [file join $APP_DIR res app-icon.png]
+wm iconphoto . app-icon
 
-pack [App .app] -expand yes -fill both
+pack [main-content .content] -expand yes -fill both
 
 update idletasks
 wm minsize . [winfo reqwidth .] [winfo reqheight .]

@@ -1,4 +1,4 @@
-snit::widget CalendarPaginator {
+snit::widget calendar-paginator {
     hulltype ttk::frame
 
     component title_label

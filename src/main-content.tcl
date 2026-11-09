@@ -1,4 +1,4 @@
-snit::widget App {
+snit::widget main-content {
     hulltype ttk::frame
 
     component calendar_tabs
@@ -21,16 +21,16 @@ snit::widget App {
 
     constructor {args} {
         install calendar_tabs using ttk::notebook $win.calendar_tabs -padding 12
-        install schedules_tab using Calendar $win.schedules_tab \
+        install schedules_tab using calendar $win.schedules_tab \
             -selected_date [myvar selected_date] \
             -calendar_date [myvar calendar_date] \
             -calendar_workers [myvar calendar_workers]
         install panel_tabs using ttk::notebook $win.panel_tabs -padding {0 12 12 12} -width 300
-        install workers_tab using Workers $win.workers_tab \
+        install workers_tab using workers $win.workers_tab \
             -selected_date [myvar selected_date] \
             -selected_worker_id [myvar selected_worker_id] \
             -revisions [myvar revisions]
-        install summary_tab using Summary $win.summary_tab \
+        install summary_tab using summary $win.summary_tab \
             -calendar_date [myvar calendar_date] \
             -revisions [myvar revisions]
 

@@ -1,30 +1,52 @@
-lappend auto_path [file join [file dirname [info script]] lib]
-package require fileutil
+const TCL [file join [file home] opt tcl 9.1]
+const TCLLIB [file join [file home] opt tcllib 2.0 lib tcllib2.0]
+const TKLIB [file join [file home] opt tklib 0.9 lib tklib0.9]
+const PKGS {sqlite3.53.4}
+const TCLLIB_PKGS {snit math}
+const TKLIB_PKGS {}
 
-set APP_NAME guardias
-set BUILD_DIR build
+const APP_NAME guardias
+const APP_ITEMS {lib migrations msgs res src main.tcl}
 
-set exe_path [zipfs mount //zipfs:/app]
-if {$exe_path eq ""} {
-    error "a static interpreter is required"
+file delete -force dist
+file mkdir dist
+
+foreach {os arch exe} {
+    osx arm64   wish9.1
+    osx x86_64  wish9.1
+    win x86_64  wish91s.exe
+} {
+    set tcl [file join $TCL $os $arch]
+    set vfs [file join [file tempdir] $APP_NAME-$os-$arch.vfs]
+
+    file delete -force $vfs
+    file mkdir $vfs
+
+    set mnt //zipfs:/base-$os-$arch
+    zipfs mount [file join $tcl bin $exe] $mnt
+    file copy [file join $mnt tcl_library] [file join $vfs tcl_library]
+    file copy [file join $mnt tk_library] [file join $vfs tk_library]
+    zipfs unmount $mnt
+
+    foreach item $APP_ITEMS {
+        if {[file exists $item]} {file copy $item [file join $vfs $item]}
+    }
+
+    file mkdir [file join $vfs lib tcllib]
+    file mkdir [file join $vfs lib tklib]
+
+    foreach pkg $PKGS        {file copy [file join $tcl lib $pkg] [file join $vfs lib $pkg]}
+    foreach pkg $TCLLIB_PKGS {file copy [file join $TCLLIB $pkg] [file join $vfs lib tcllib $pkg]}
+    foreach pkg $TKLIB_PKGS  {file copy [file join $TKLIB $pkg] [file join $vfs lib tklib $pkg]}
+
+    switch -exact -- $os {
+        osx {
+            zipfs mkimg [file join dist $APP_NAME-$os-$arch] $vfs $vfs "" [file join $tcl bin $exe]
+        }
+        win {
+            zipfs mkimg [file join dist $APP_NAME-$arch.exe] $vfs $vfs "" [file join $tcl bin $exe]
+        }
+    }
+
+    file delete -force $vfs
 }
-
-set vfs_path [fileutil::maketempdir -suffix .vfs]
-
-file delete -force $vfs_path
-file delete -force build
-file mkdir build
-
-file copy $tcl_library [file join $vfs_path tcl_library]
-file copy $tk_library [file join $vfs_path tk_library]
-file copy lib [file join $vfs_path lib]
-file copy main.tcl [file join $vfs_path main.tcl]
-file copy src [file join $vfs_path src]
-file copy res [file join $vfs_path res]
-
-set out_path [file join build $APP_NAME.exe]
-zipfs mkimg $out_path $vfs_path $vfs_path "" $exe_path
-
-file delete -force $vfs_path
-
-exit

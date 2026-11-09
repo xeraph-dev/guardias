@@ -1,4 +1,4 @@
-snit::widget CalendarCell {
+snit::widget calendar-cell {
     hulltype ttk::frame
 
     component day
