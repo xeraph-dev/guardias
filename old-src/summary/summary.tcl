@@ -52,13 +52,13 @@ snit::widget summary {
         set last_month_day_date [clock add $first_month_day_date 1 month -1 day]
 
         $tree delete [$tree children {}]
-        db eval {
-            SELECT workers.id, workers.name, COUNT(schedules.id) as vacations FROM workers
-            INNER JOIN schedules ON workers.id = schedules.worker_id
-            WHERE schedules.date BETWEEN :first_month_day_date AND :last_month_day_date
-            GROUP BY workers.id
-        } {
-            $tree insert {} end -id $id -values [list $id $name $vacations]
-        }
+        # db eval {
+        #     SELECT workers.id, workers.name, COUNT(schedules.id) as vacations FROM workers
+        #     INNER JOIN schedules ON workers.id = schedules.worker_id
+        #     WHERE schedules.date BETWEEN :first_month_day_date AND :last_month_day_date
+        #     GROUP BY workers.id
+        # } {
+        #     $tree insert {} end -id $id -values [list $id $name $vacations]
+        # }
     }
 }

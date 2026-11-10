@@ -5,53 +5,53 @@ snit::widget calendar-cell {
     component names
 
     option -calendar_date
-    option -selected_date -configuremethod ConfigureSelectedDateOption
-    option -cell_date -configuremethod ConfigureCellDateOption
-    option -calendar_workers -configuremethod ConfigureCalendarWorkersOption
+    option -selected_date -configuremethod configure-selected_date
+    option -cell_date -configuremethod configure-cell_date
+    option -calendar_workers -configuremethod configure-calendar_workers
 
-    delegate option * to hull
     delegate method * to hull
+    delegate option * to hull
 
     variable day_text {}
     variable names_text {}
 
-    constructor {args} {
+    constructor args {
         install day using ttk::label $win.day -textvariable [myvar day_text]
         install names using ttk::label $win.names -textvariable [myvar names_text] -wraplength 80
 
         pack $day -anchor ne -padx 4 -pady 4
         pack $names -anchor center -padx 4
 
-        bind $win <Button-1> [mymethod OnClick]
-        bind $day <Button-1> [mymethod OnClick]
-        bind $names <Button-1> [mymethod OnClick]
+        bind $win <Button-1> [mymethod on_click]
+        bind $day <Button-1> [mymethod on_click]
+        bind $names <Button-1> [mymethod on_click]
 
         $self configurelist $args
     }
 
     destructor {
-        try {trace remove variable $options(-selected_date) write [mymethod RefreshDates]}
-        try {trace remove variable $options(-calendar_workers) write [mymethod RefreshCalendarWorkersNames]}
+        try {trace remove variable $options(-selected_date) write [mymethod refresh]}
+        try {trace remove variable $options(-calendar_workers) write [mymethod refresh_worker_name]}
     }
 
-    method ConfigureSelectedDateOption {option value} {
+    method configure-selected_date {option value} {
         set options($option) $value
-        $self RefreshDates
-        trace add variable $options(-selected_date) write [mymethod RefreshDates]
+        $self refresh
+        trace add variable $options(-selected_date) write [mymethod refresh]
     }
 
-    method ConfigureCellDateOption {option value} {
+    method configure-cell_date {option value} {
         set options($option) $value
-        $self RefreshDates
+        $self refresh
     }
 
-    method ConfigureCalendarWorkersOption {option value} {
+    method configure-calendar_workers {option value} {
         set options($option) $value
-        $self RefreshCalendarWorkersNames
-        trace add variable $options(-calendar_workers) write [mymethod RefreshCalendarWorkersNames]
+        $self refresh_worker_name
+        trace add variable $options(-calendar_workers) write [mymethod refresh_worker_name]
     }
 
-    method RefreshDates {args} {
+    method refresh args {
         if {$options(-calendar_date) == {} || $options(-cell_date) == {}} { return }
 
         upvar $options(-calendar_date) calendar_date
@@ -76,9 +76,10 @@ snit::widget calendar-cell {
         $day configure -foreground $foreground
         $names configure -foreground $foreground
 
-        $self RefreshCalendarWorkersNames
+        $self refresh_worker_name
     }
-    method RefreshCalendarWorkersNames {args} {
+
+    method refresh_worker_name args {
         if {$options(-calendar_workers) == {}} {return}
         upvar $options(-calendar_workers) calendar_workers
 
@@ -91,7 +92,7 @@ snit::widget calendar-cell {
         set names_text [join $workers_names "\n"]
     }
 
-    method OnClick {args} {
+    method on_click args {
         upvar $options(-selected_date) selected_date
         if {$options(-cell_date) != $selected_date} { set selected_date $options(-cell_date) }
     }

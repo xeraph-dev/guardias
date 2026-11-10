@@ -1,0 +1,12 @@
+snit::widget workers-panel {
+    hulltype ttk::frame
+
+    option -revisions
+
+    delegate method * to hull
+    delegate option * to hull
+
+    constructor args {
+        $self configurelist $args
+    }
+}

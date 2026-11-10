@@ -13,10 +13,10 @@ snit::widget calendar-grid {
         }
     }
 
-    option -calendar_date -configuremethod ConfigureCalendarDateOption
+    option -calendar_date -configuremethod configure-calendar_date
 
-    delegate option * to hull
     delegate method * to hull
+    delegate option * to hull
 
     propagate -selected_date to [concat {*}[
         lmap row [lseq 1 to 6] {
@@ -33,7 +33,7 @@ snit::widget calendar-grid {
         }
     ]]
 
-    constructor {args} {
+    constructor args {
         set days [lmap day [lseq 1 to 7] {
             set time [clock scan $day -format %u]
             clock format $time -format %A
@@ -72,21 +72,21 @@ snit::widget calendar-grid {
     }
 
     destructor {
-        try {trace remove variable $options(-calendar_date) write [mymethod CalendarDateChanged]}
+        try {trace remove variable $options(-calendar_date) write [mymethod refresh]}
     }
 
-    method ConfigureCalendarDateOption {option value} {
+    method configure-calendar_date {option value} {
         set options($option) $value
         foreach row [lseq 1 to 6] {
             foreach col [lseq 1 to 7] {
                 [set cell_${row}x${col}] configure -calendar_date $options(-calendar_date)
             }
         }
-        $self CalendarDateChanged
-        trace add variable $options(-calendar_date) write [mymethod CalendarDateChanged]
+        $self refresh
+        trace add variable $options(-calendar_date) write [mymethod refresh]
     }
 
-    method CalendarDateChanged {args} {
+    method refresh args {
         upvar $options(-calendar_date) calendar_date
 
         set first_month_day [clock format $calendar_date -format "01/%m/%Y 00:00:00"]
