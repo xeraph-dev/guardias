@@ -3,26 +3,7 @@ package require fileutil
 
 namespace import fileutil::cat
 
-const APP_NAME guardias
-const APP_ITEMS {lib migrations msgs res src main.tcl}
-
-const PREFIX [file join [file home] opt tcl 9.1.0]
-const PKGS {sqlite3.53.4}
-const TCLLIB_PKGS {snit math}
-const TKLIB_PKGS {widget}
-
-switch -exact -- $tcl_platform(os) {
-    "Windows NT"    {set default_os win}
-    Darwin          {set default_os osx}
-    Linux           {set default_os linux}
-    default         {puts stderr "unsupported target operating system"}
-}
-
-switch -exact -- $tcl_platform(machine) {
-    arm64           {set default_arch arm64}
-    x86_64 - amd64  {set default_arch x86_64}
-    default         {puts stderr "unsupported target architecture"}
-}
+source [file join [file dirname [info script]] common.tcl]
 
 set options [list \
     [list os.arg        $default_os         "target operating system (osx, win, linux, all)"] \
