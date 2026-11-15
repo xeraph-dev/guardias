@@ -13,3 +13,15 @@ proc get_data_dir {} {
         default {error "get_data_dir: unknown platform: $::tcl_platform(os)"}
     }
 }
+
+proc center_over {win parent} {
+    update idletasks
+    set x [expr {[winfo rootx $parent] + [winfo width $parent] - [winfo reqwidth $win]}]
+    set y [expr {[winfo rooty $parent] + [winfo height $parent] - [winfo reqheight $win]}]
+    wm geometry $win +$x+$y
+}
+
+proc update_minsize {win} {
+    update idletasks
+    wm minsize $win [winfo reqwidth $win] [winfo reqheight $win]
+}

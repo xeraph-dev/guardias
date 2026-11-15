@@ -1,8 +1,6 @@
 snit::widget calendar {
     hulltype ttk::frame
 
-    option -revisions
-
     delegate method * to hull
     delegate option * to hull
 

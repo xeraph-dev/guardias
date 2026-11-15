@@ -2,7 +2,7 @@ const APP_DIR [file dirname [info script]]
 const APP_NAME guardias
 const DEFAULT_LOCALE es
 
-foreach dir {{} tcllib tklib} {lappend auto_path [file join $APP_DIR lib $dir]}
+lappend auto_path [file join $APP_DIR lib]
 
 package require snit
 package require sqlite3
@@ -35,7 +35,7 @@ if {![mcload [file join $APP_DIR msgs]]} {
 
 wm title . [mc window.title]
 
-image create photo app-icon -file [file join $APP_DIR res app-icon.png]
+image create photo app-icon -file [file join $APP_DIR res app-icon.svg] -format {svg -scale 0.25}
 wm iconphoto . app-icon
 
 pack [main-content .content] -expand yes -fill both
