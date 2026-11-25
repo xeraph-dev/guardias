@@ -7,7 +7,7 @@ snit::widget workers-lists {
     delegate method * to hull
     delegate option * to hull
 
-    propagate -revisions to active_list
+    propagate -revisions to {active_list active_actions}
 
     constructor args {
         install active_list    using workers-active-list    $win.active

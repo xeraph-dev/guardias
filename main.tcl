@@ -8,8 +8,10 @@ package require snit
 package require sqlite3
 package require msgcat
 package require widget::dialog
+package require defer
 
 namespace import msgcat::*
+namespace import defer::defer
 
 proc source_files {dir} {
     foreach file [lsort [glob -nocomplain -directory $dir -types f *.tcl]]  {source $file}

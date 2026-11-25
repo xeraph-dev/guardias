@@ -66,6 +66,8 @@ snit::widgetadaptor workers-edit-dialog {
             focus $entry
             return
         }
+
+        $self close save
     }
 }
 
@@ -73,5 +75,6 @@ proc show_workers_edit_dialog {parent {id -1}} {
     set win .edit_dialog
     catch {destroy $win}
     set dialog [workers-edit-dialog $win -parent $parent -id $id]
-    $dialog display
+    defer {catch {destroy $dialog}}
+    return [$dialog display]
 }

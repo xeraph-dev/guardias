@@ -7,6 +7,8 @@ snit::widget workers-active-actions {
     component edit_button
     component layoff_button
 
+    option -revisions
+
     delegate method * to hull
     delegate option * to hull
 
@@ -28,7 +30,9 @@ snit::widget workers-active-actions {
     method Down {} {}
 
     method Add {} {
-        show_workers_edit_dialog $win
+        if {[show_workers_edit_dialog $win] eq "save"} {
+            incr $options(-revisions)(workers)
+        }
     }
 
     method Edit {} {}
