@@ -17,10 +17,13 @@ snit::widgetadaptor workers-edit-dialog {
 
         pack $entry -fill both -expand yes -padx 4 -pady 4
 
-        $self add button -text [mc workers.dialog.edit.save] -command [mymethod Save]
+        $self add button -text [mc common.cancel] -command [list $self close cancel]
+        $self add button -text [mc common.save] -command [mymethod Save] -default active
 
         $self configurelist $args
         $self configure -focus $entry
+
+        bind $win <Return> [mymethod Save]
     }
 
     method Configure-id {option value} {
@@ -30,6 +33,7 @@ snit::widgetadaptor workers-edit-dialog {
             db eval {SELECT name FROM workers WHERE id = :options(-id)} {}
             $self configure -title [mc workers.dialog.edit.title $name]
         } else {
+            set name {}
             $self configure -title [mc workers.dialog.edit.title-new]
         }
     }
@@ -73,8 +77,13 @@ snit::widgetadaptor workers-edit-dialog {
 
 proc show_workers_edit_dialog {parent {id -1}} {
     set win .edit_dialog
-    catch {destroy $win}
-    set dialog [workers-edit-dialog $win -parent $parent -id $id]
-    defer {catch {destroy $dialog}}
-    return [$dialog display]
+    defer {catch {destroy $win}}
+
+    if {[winfo exists $win]} {
+        $win configure -id $id
+    } else {
+        workers-edit-dialog $win -parent $parent -id $id
+    }
+
+    return [$win display]
 }
