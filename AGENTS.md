@@ -71,3 +71,8 @@ Examples:
 ### Rules of thumb
 - One logical change per commit when practical; avoid mixing unrelated refactors, formatting-only noise, and feature work.
 - Do **not** commit generated/build outputs or local-only artifacts unless the project explicitly tracks them (follow `.gitignore`; be careful with `build/` contents and OS files like `.DS_Store`).
+
+## Verification
+- Do not run `tclsh` or `wish` to test or verify changes (ad-hoc snippets,
+  launching the app, etc.); the user runs those commands locally.
+- Exception: `tclsh scripts/doc.tcl <doc>` is allowed for documentation lookups.
