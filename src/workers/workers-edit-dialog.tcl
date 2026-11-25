@@ -1,57 +1,77 @@
-# snit::widgetadaptor workers-edit-dialog {
-#     delegate method * to hull
-#     delegate option * to hull
-#
-#     constructor args {
-#         installhull using widget::dialog -title []
-#
-#         $self configurelist $args
-#     }
-# }
-
-snit::widget workers-edit-dialog {
-    hulltype toplevel
-
-    option -parent -readonly yes
-    option -id -default -1 -readonly yes
+snit::widgetadaptor workers-edit-dialog {
+    component entry
 
     delegate method * to hull
     delegate option * to hull
 
+    option -id -configuremethod Configure-id
+
     variable name {}
 
     constructor args {
-        wm withdraw $win
+        installhull using widget::dialog
+
+        set frame [$self getframe]
+
+        install entry using ttk::entry $frame.entry -textvariable [myvar name]
+
+        pack $entry -fill both -expand yes -padx 4 -pady 4
+
+        $self add button -text [mc workers.dialog.edit.save] -command [mymethod Save]
 
         $self configurelist $args
-        $self SetTitle
-
-        wm protocol $win WM_DELETE_WINDOW [list destroy $win]
-
-        update idletasks
-        wm minsize . [winfo reqwidth .] [winfo reqheight .]
-        set parent [winfo toplevel $options(-parent)]
-        set x [expr {[winfo rootx $parent] + [winfo reqwidth $parent]/2 - [winfo reqwidth $win]/2}]
-        set y [expr {[winfo rooty $parent] + [winfo reqheight $parent]/2 - [winfo reqheight $win]/2}]
-        wm geometry $win +$x+$y
-        wm deiconify $win
+        $self configure -focus $entry
     }
 
-    method SetTitle {} {
-        set id $options(-id)
-        if {$id > -1} {
-            wm title $win [mc workers.dialog.edit.title $name]
-        } elseif {$id == -1} {
-            wm title $win [mc workers.dialog.edit.title-new]
+    method Configure-id {option value} {
+        set options($option) $value
+
+        if {$options(-id) > -1} {
+            db eval {SELECT name FROM workers WHERE id = :options(-id)} {}
+            $self configure -title [mc workers.dialog.edit.title $name]
+        } else {
+            $self configure -title [mc workers.dialog.edit.title-new]
+        }
+    }
+
+    method Save {} {
+        set name [string trim $name]
+
+        try {
+            if {$options(-id) > -1} {
+                db eval {
+                    UPDATE workers
+                    SET name = :name
+                    WHERE id = :options(-id)
+                }
+            } else {
+                db eval {
+                    INSERT INTO workers (name)
+                    VALUES (:name)
+                }
+            }
+        } on error {msg opts} {
+            switch -regexp -nocase -matchvar m -- $msg {
+                {^UNIQUE constraint failed: workers\.(\w+)} {
+                    set key workers.dialog.edit.form.[lindex $m 1].unique
+                }
+                {^CHECK constraint failed: workers_(\w+?)_(\w+)$} {
+                    set key workers.dialog.edit.form.[lindex $m 1].[lindex $m 2]
+                }
+                default {
+                    return -options $opts $msg
+                }
+            }
+            tk_messageBox -type ok -icon error -title [mc common.error] -message [mc $key]
+            focus $entry
+            return
         }
     }
 }
 
 proc show_workers_edit_dialog {parent {id -1}} {
     set win .edit_dialog
-    if {[winfo exists $win]} {
-        focus $win
-    } else {
-        workers-edit-dialog $win -parent $parent -id $id]
-    }
+    catch {destroy $win}
+    set dialog [workers-edit-dialog $win -parent $parent -id $id]
+    $dialog display
 }

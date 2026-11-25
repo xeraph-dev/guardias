@@ -17,7 +17,8 @@ snit::widget workers-active-list-actions {
         install edit_button using ttk::button $win.edit -text ✎ -command [mymethod Edit] -state disabled
         install layoff_button using ttk::button $win.delete -text [mc workers.layoff] -command [mymethod Layoff] -state disabled
 
-        pack $up_button $down_button $add_button $edit_button $layoff_button -side left -fill both -expand yes
+        pack $up_button $down_button $add_button $edit_button -side left -fill both -expand yes -padx {0 4}
+        pack $layoff_button -side left -fill both -expand yes
 
         $self configurelist $args
     }

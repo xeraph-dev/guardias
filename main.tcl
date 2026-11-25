@@ -7,6 +7,7 @@ lappend auto_path [file join $APP_DIR lib]
 package require snit
 package require sqlite3
 package require msgcat
+package require widget::dialog
 
 namespace import msgcat::*
 

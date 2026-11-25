@@ -11,7 +11,7 @@ snit::widget workers-active-list {
         install tree using ttk::treeview $win.tree
         install actions using workers-active-list-actions $win.actions
 
-        pack $tree -fill both -expand yes
+        pack $tree -fill both -expand yes -pady {0 4}
         pack $actions -fill x -expand yes
 
         $self configurelist $args
