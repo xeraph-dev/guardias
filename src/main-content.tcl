@@ -15,16 +15,16 @@ snit::widget main-content {
     variable selected_worker_id -1
 
     constructor args {
-        install calendar using calendar $win.calendar
-        install assign using assign-panel $win.assign
-        install workers using workers-panel $win.workers
+        install calendar using calendar      $win.calendar
+        install assign   using assign-panel  $win.assign
+        install workers  using workers-panel $win.workers -revisions [myvar revisions]
 
-        grid $calendar  -row 0 -column 0
-        grid $assign    -row 1 -column 0
-        grid $workers   -row 0 -column 1 -rowspan 2
+        grid $calendar -row 0 -column 0
+        grid $assign   -row 1 -column 0
+        grid $workers  -row 0 -column 1 -rowspan 2
 
         grid columnconfigure $win 0 -weight 1
-        grid rowconfigure $win 0 -weight 1
+        grid rowconfigure    $win 0 -weight 1
 
         $self configurelist $args
     }

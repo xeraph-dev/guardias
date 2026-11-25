@@ -2,14 +2,19 @@ snit::widget workers-lists {
     hulltype ttk::frame
 
     component active_list
+    component active_actions
 
     delegate method * to hull
     delegate option * to hull
 
-    constructor args {
-        install active_list using workers-active-list $win.active
+    propagate -revisions to active_list
 
-        pack $active_list -fill x -expand yes
+    constructor args {
+        install active_list    using workers-active-list    $win.active
+        install active_actions using workers-active-actions $win.active_actions
+
+        pack $active_list    -fill both -expand yes -pady {0 4}
+        pack $active_actions -fill x    -expand yes
 
         $self configurelist $args
     }

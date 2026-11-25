@@ -7,8 +7,10 @@ snit::widget workers-panel {
     delegate method * to hull
     delegate option * to hull
 
+    propagate -revisions to lists_tab
+
     constructor args {
-        install tabs using ttk::notebook $win.tabs
+        install tabs      using ttk::notebook $win.tabs
         install lists_tab using workers-lists $win.tabs.lists
 
         $tabs add $lists_tab -text [mc workers.lists-tab]

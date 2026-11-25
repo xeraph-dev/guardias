@@ -1,4 +1,4 @@
-snit::widget workers-active-list-actions {
+snit::widget workers-active-actions {
     hulltype ttk::frame
 
     component up_button
